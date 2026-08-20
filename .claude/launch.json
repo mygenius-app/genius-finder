@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "geniusapp-static",
+      "runtimeExecutable": "C:/Users/geniu/AppData/Local/Python/bin/python.exe",
+      "runtimeArgs": ["-m", "http.server", "8532"],
+      "port": 8532
+    }
+  ]
+}
