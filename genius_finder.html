@@ -3,62 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>GENIUS FINDER</title>
+<title>GENIUS FINDER 〜爆笑鑑定ゲーム〜</title>
 <style>
   :root {
-    --bg: #100b1a;
-    --surface: #1c1428;
-    --surface2: #271c38;
-    --border: #3a2c4d;
-    --text: #f5f0ff;
-    --sub: #a396bd;
-    --accent: #ffb84d;
-    --accent2: #7ee8d8;
-    --pop: #ff6b9d;
+    --bg: #fff8ef;
+    --bg2: #ffeef7;
+    --surface: #ffffff;
+    --surface2: #fff1e0;
+    --border: #f0d9bd;
+    --text: #2b1d3d;
+    --sub: #7a6b93;
+    --accent: #e8850f;
+    --accent2: #0e9c8c;
+    --pop: #ef4d85;
     --pop2: #ffd166;
-    --green: #6ec89a;
-    --danger: #ff6b7a;
-    --radius: 16px;
-    --radius-sm: 10px;
+    --green: #2f9d63;
+    --danger: #e0505f;
+    --neon: #8a5cf5;
+    --radius: 18px;
+    --radius-sm: 12px;
+    --rarity-n: #9aa0a6;
+    --rarity-r: #5ec8f2;
+    --rarity-sr: #c792ea;
+    --rarity-ssr: #ffd166;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
   body {
     font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-    background: var(--bg);
+    background:
+      radial-gradient(circle at 15% 0%, rgba(138,92,245,0.14), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(239,77,133,0.12), transparent 45%),
+      var(--bg);
     color: var(--text);
     min-height: 100vh;
     font-size: 15px;
     line-height: 1.6;
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.05;
+    background: repeating-linear-gradient(0deg, #2b1d3d 0px, #2b1d3d 1px, transparent 1px, transparent 3px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   }
 
   /* ── ヘッダー ── */
   .header {
-    padding: 20px 20px 0;
+    padding: 16px 20px 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: relative;
+    z-index: 2;
   }
   .logo {
     font-size: 13px;
     letter-spacing: 0.2em;
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 900;
+  }
+  .logo::before { content: '🎪 '; }
+  .level-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, var(--pop), var(--accent));
+    color: #1a0f10;
+    font-weight: 900;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    box-shadow: 0 0 0 2px var(--bg), 0 0 14px rgba(255,107,157,0.45);
+    white-space: nowrap;
   }
   .step-indicator {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--sub);
+    text-align: right;
+    margin-top: 4px;
   }
 
   /* ── 画面共通 ── */
-  .screen { display: none; padding: 24px 20px 40px; max-width: 480px; margin: 0 auto; }
-  .screen.active { display: block; }
+  .screen { display: none; padding: 22px 20px 44px; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
+  .screen.active { display: block; animation: screenIn 0.35s ease; }
+  @keyframes screenIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  h1 { font-size: 22px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; }
-  h2 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
-  .sub-text { color: var(--sub); font-size: 13px; margin-bottom: 24px; }
+  h1 { font-size: 22px; font-weight: 900; line-height: 1.35; margin-bottom: 8px; }
+  h2 { font-size: 18px; font-weight: 900; margin-bottom: 12px; }
+  .sub-text { color: var(--sub); font-size: 13px; margin-bottom: 22px; }
   .humor {
-    background: linear-gradient(135deg, rgba(255,107,157,0.12), rgba(255,209,102,0.10));
-    border: 1px dashed rgba(255,184,77,0.5);
+    background: linear-gradient(135deg, rgba(255,107,157,0.14), rgba(255,209,102,0.10));
+    border: 1px dashed rgba(255,184,77,0.55);
     padding: 12px 16px;
     border-radius: var(--radius-sm);
     font-size: 13px;
@@ -66,9 +111,20 @@
     margin-bottom: 20px;
     position: relative;
   }
-  .humor::before {
-    content: '💬';
-    margin-right: 6px;
+  .humor::before { content: '💬 '; }
+
+  .sticker {
+    display: inline-block;
+    background: var(--pop2);
+    color: #241a00;
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transform: rotate(-4deg);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+    margin-bottom: 10px;
   }
 
   /* ── ボタン ── */
@@ -79,15 +135,46 @@
     border-radius: var(--radius);
     border: none;
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
-    transition: opacity 0.15s;
+    transition: transform 0.12s, opacity 0.15s, box-shadow 0.15s;
     text-align: center;
   }
-  .btn:active { opacity: 0.7; }
-  .btn-primary { background: linear-gradient(135deg, var(--pop), var(--accent)); color: #1a0f10; box-shadow: 0 6px 16px rgba(255,107,157,0.25); }
+  .btn:active { opacity: 0.75; transform: scale(0.98); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--pop), var(--accent));
+    color: #1a0f10;
+    box-shadow: 0 6px 18px rgba(255,107,157,0.3);
+  }
+  .btn-primary:not(:disabled) { animation: ctaPulse 2.4s ease-in-out infinite; }
+  @keyframes ctaPulse {
+    0%, 100% { box-shadow: 0 6px 18px rgba(255,107,157,0.3); }
+    50% { box-shadow: 0 6px 26px rgba(255,184,77,0.55); }
+  }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; animation: none; }
   .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
   .btn-ghost { background: transparent; color: var(--sub); font-size: 13px; padding: 10px; }
+  .btn-gacha {
+    display: block;
+    width: 140px;
+    height: 140px;
+    margin: 12px auto;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 900;
+    color: #1a0f10;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255,255,255,0.65), transparent 40%),
+      linear-gradient(135deg, var(--pop2), var(--pop) 60%, var(--neon));
+    box-shadow: 0 10px 24px rgba(185,139,255,0.4), inset 0 0 0 4px rgba(255,255,255,0.25);
+    animation: capsuleWiggle 1.6s ease-in-out infinite;
+  }
+  @keyframes capsuleWiggle {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
   .btn + .btn { margin-top: 10px; }
 
   /* ── フォーム ── */
@@ -108,8 +195,20 @@
   label { display: block; font-size: 13px; color: var(--sub); margin-bottom: 6px; }
   .field { margin-bottom: 20px; }
 
-  /* ── SCREEN 0: APIキー設定 ── */
+  /* ── SCREEN 0: 起動キー ── */
   .api-note { font-size: 12px; color: var(--sub); margin-top: 6px; }
+  .coin-slot {
+    width: 100%;
+    height: 90px;
+    border-radius: var(--radius);
+    background: repeating-linear-gradient(135deg, #2a1e3d, #2a1e3d 10px, #241934 10px, #241934 20px);
+    border: 2px dashed var(--neon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    margin-bottom: 22px;
+  }
 
   /* ── SCREEN 1: スタート ── */
   .start-visual {
@@ -125,9 +224,10 @@
     overflow: hidden;
   }
   .start-visual::after {
-    content: '✨';
-    font-size: 64px;
-    opacity: 0.85;
+    content: '🎨🔮🃏';
+    font-size: 40px;
+    letter-spacing: 8px;
+    opacity: 0.9;
     filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
   }
   .start-visual-text {
@@ -135,7 +235,7 @@
     bottom: 16px;
     left: 20px;
     font-size: 12px;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.55);
     letter-spacing: 0.15em;
   }
   .tagline {
@@ -143,7 +243,7 @@
     color: var(--accent);
     letter-spacing: 0.1em;
     margin-bottom: 8px;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   /* ── SCREEN 2: アート選択 ── */
@@ -183,8 +283,14 @@
   }
   .art-item.selected {
     border-color: var(--accent);
-    transform: scale(0.96);
+    animation: stampBounce 0.3s ease;
   }
+  @keyframes stampBounce {
+    0% { transform: scale(1); }
+    45% { transform: scale(0.88) rotate(-3deg); }
+    100% { transform: scale(0.96) rotate(0); }
+  }
+  .art-item.selected { transform: scale(0.96); }
   .art-item .check {
     display: none;
     position: absolute;
@@ -255,7 +361,7 @@
     border: none;
   }
 
-  /* ── SCREEN 3: 言語化 ── */
+  /* ── SCREEN 3: 尋問タイム ── */
   .focus-art-display {
     width: 100%;
     aspect-ratio: 4/3;
@@ -289,12 +395,27 @@
     border: 1px solid var(--border);
     flex-shrink: 0;
   }
+  .honesty-meter {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .honesty-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width 0.3s ease;
+  }
+  .honesty-label { font-size: 11px; color: var(--sub); margin-bottom: 20px; text-align: right; }
   .question-block {
     margin-bottom: 24px;
   }
   .question-label {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 10px;
     color: var(--text);
   }
@@ -318,10 +439,10 @@
     background: var(--accent);
     color: #111;
     border-color: var(--accent);
-    font-weight: 600;
+    font-weight: 700;
   }
 
-  /* ── SCREEN 4: テーマ生成 ── */
+  /* ── SCREEN 4: お題ガチャ ── */
   .theme-card {
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -330,10 +451,19 @@
     margin-bottom: 12px;
     cursor: pointer;
     transition: border-color 0.15s;
+    opacity: 0;
+    animation: capsulePop 0.4s ease forwards;
   }
-  .theme-card.selected { border-color: var(--accent); }
-  .theme-card .theme-label { font-size: 11px; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 6px; }
-  .theme-card .theme-text { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .theme-card:nth-child(1) { animation-delay: 0.05s; }
+  .theme-card:nth-child(2) { animation-delay: 0.2s; }
+  .theme-card:nth-child(3) { animation-delay: 0.35s; }
+  @keyframes capsulePop {
+    from { opacity: 0; transform: scale(0.7) rotate(-4deg); }
+    to { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  .theme-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .theme-card .theme-label { font-size: 11px; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 6px; font-weight: 800; }
+  .theme-card .theme-text { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
   .theme-card .theme-hint { font-size: 12px; color: var(--sub); }
   #loading-theme {
     text-align: center;
@@ -351,28 +481,42 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── SCREEN 5: 創作 ── */
+  /* ── SCREEN 5: 証拠提出（描く） ── */
+  .evidence-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--bg);
+    background: var(--accent2);
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    transform: rotate(-2deg);
+  }
   .timer-display {
     text-align: center;
     font-size: 48px;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--accent);
     margin: 16px 0;
     font-variant-numeric: tabular-nums;
   }
   .timer-label { text-align: center; font-size: 13px; color: var(--sub); margin-bottom: 20px; }
   .upload-area {
-    border: 2px dashed var(--border);
+    border: 3px dashed var(--pop);
     border-radius: var(--radius);
-    padding: 32px 20px;
+    padding: 34px 20px;
     text-align: center;
     cursor: pointer;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, transform 0.1s;
     margin-bottom: 16px;
+    background: rgba(255,107,157,0.06);
   }
-  .upload-area:hover { border-color: var(--accent); }
-  .upload-area .upload-icon { font-size: 36px; margin-bottom: 10px; }
+  .upload-area:active { transform: scale(0.98); }
+  .upload-area .upload-icon { font-size: 40px; margin-bottom: 10px; }
   .upload-area p { font-size: 14px; color: var(--sub); }
+  .upload-area .upload-main { color: var(--text); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
   #upload-input { display: none; }
   #preview-img {
     width: 100%;
@@ -381,14 +525,90 @@
     margin-bottom: 16px;
     max-height: 300px;
     object-fit: cover;
+    border: 2px solid var(--accent);
   }
 
-  /* ── SCREEN 6: 仮説 ── */
+  /* ── SCREEN 6: AI鑑定 / ガチャ ── */
   #loading-hypothesis {
     text-align: center;
-    padding: 60px 0;
+    padding: 50px 0;
   }
-  .loading-text { color: var(--sub); font-size: 14px; margin-top: 12px; }
+  .loading-text { color: var(--sub); font-size: 14px; margin-top: 12px; min-height: 40px; }
+  .gacha-wrap { text-align: center; padding: 30px 0; }
+  .gacha-hint { color: var(--sub); font-size: 13px; margin-top: 6px; }
+  #confetti-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 200;
+  }
+  .confetti-piece {
+    position: absolute;
+    top: -20px;
+    font-size: 20px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(110vh) rotate(360deg); opacity: 0.2; }
+  }
+
+  .rarity-badge {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+    color: #1a0f10;
+  }
+  .rarity-N { background: var(--rarity-n); }
+  .rarity-R { background: var(--rarity-r); }
+  .rarity-SR { background: var(--rarity-sr); }
+  .rarity-SSR { background: linear-gradient(135deg, var(--rarity-ssr), var(--pop)); box-shadow: 0 0 16px rgba(255,209,102,0.6); }
+  .rarity-UR { background: linear-gradient(135deg, #ff6b9d, #ffd166, #7ee8d8, #b98bff); background-size: 300% 300%; animation: rainbow 2.5s linear infinite; box-shadow: 0 0 20px rgba(185,139,255,0.7); }
+  @keyframes rainbow { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+
+  .stat-row { margin-bottom: 12px; }
+  .stat-head { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); margin-bottom: 4px; }
+  .stat-head b { color: var(--text); }
+  .stat-bar { background: var(--surface); border-radius: 999px; height: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .stat-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 0.9s cubic-bezier(.2,.9,.3,1); }
+  .stat-fill.genius { background: linear-gradient(90deg, var(--accent2), var(--green)); }
+  .stat-fill.chaos { background: linear-gradient(90deg, var(--pop), var(--danger)); }
+  .stat-fill.funny { background: linear-gradient(90deg, var(--pop2), var(--accent)); }
+
+  .observation-log {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .observation-log-title { font-size: 11px; letter-spacing: 0.1em; color: var(--accent2); font-weight: 800; margin-bottom: 8px; }
+  .observation-item { font-size: 13px; color: var(--text); padding: 3px 0; padding-left: 18px; position: relative; }
+  .observation-item::before { content: '🔍'; position: absolute; left: -2px; font-size: 11px; }
+
+  .roast-box {
+    background: linear-gradient(135deg, rgba(255,107,157,0.14), rgba(126,232,216,0.10));
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .roast-box::before { content: '🎙️ ツッコミ：'; color: var(--pop); font-weight: 800; }
+
+  .drawing-evidence {
+    width: 100%;
+    max-height: 260px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 2px solid var(--accent2);
+    margin-bottom: 14px;
+  }
+
   .hypothesis-box {
     background: var(--surface2);
     border-radius: var(--radius);
@@ -400,14 +620,18 @@
     font-size: 11px;
     letter-spacing: 0.15em;
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 800;
     margin-bottom: 6px;
   }
   .hyp-name {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 23px;
+    font-weight: 900;
     line-height: 1.3;
     margin-bottom: 8px;
+    background: linear-gradient(90deg, var(--pop2), var(--pop));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   .hyp-text { font-size: 14px; line-height: 1.7; color: var(--text); }
   .evidence-list { margin-top: 10px; }
@@ -448,12 +672,12 @@
   .reaction-btn.selected span { color: #111; }
   .reaction-btn .icon { display: block; font-size: 20px; margin-bottom: 4px; }
 
-  /* ── SCREEN 7: 今日の発見カード ── */
+  /* ── SCREEN 7: 鑑定書カード ── */
   .genius-card {
     background: linear-gradient(135deg, #2a1a3e 0%, #1c1428 100%);
     border: 1px solid var(--accent);
     border-radius: 20px;
-    padding: 28px 24px;
+    padding: 26px 22px;
     margin-bottom: 24px;
     position: relative;
     overflow: hidden;
@@ -478,16 +702,29 @@
     font-size: 10px;
     letter-spacing: 0.2em;
     color: var(--accent);
-    font-weight: 700;
-    margin-bottom: 16px;
+    font-weight: 800;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-image-wrap { position: relative; margin-bottom: 16px; }
+  .card-image-wrap img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--accent2);
+    display: block;
   }
   .card-genius-name {
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 900;
     line-height: 1.3;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     color: #fff;
   }
+  .card-stats { margin-bottom: 18px; }
   .card-row { margin-bottom: 14px; }
   .card-row-label {
     font-size: 10px;
@@ -496,6 +733,16 @@
     margin-bottom: 4px;
   }
   .card-row-value { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+  .card-achievements { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .achievement-pill {
+    font-size: 11px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
   .card-version {
     position: absolute;
     bottom: 14px;
@@ -507,17 +754,20 @@
 
   /* ── プログレスバー ── */
   .progress-bar {
-    height: 2px;
+    height: 4px;
     background: var(--border);
-    margin: 16px 20px 0;
+    margin: 14px 20px 0;
     border-radius: 2px;
     overflow: hidden;
+    position: relative;
+    z-index: 2;
   }
   .progress-fill {
     height: 100%;
-    background: var(--accent);
+    background: linear-gradient(90deg, var(--pop), var(--accent), var(--accent2));
     border-radius: 2px;
     transition: width 0.3s ease;
+    box-shadow: 0 0 8px rgba(255,184,77,0.6);
   }
 
   /* ── 同意チェック ── */
@@ -547,53 +797,56 @@
 <!-- ヘッダー -->
 <div class="header">
   <div class="logo">GENIUS FINDER</div>
-  <div class="step-indicator" id="step-label"></div>
+  <div class="level-pill" id="level-badge">LV.0</div>
 </div>
+<div class="header" style="padding-top:0"><div></div><div class="step-indicator" id="step-label"></div></div>
 
-<!-- ===== SCREEN 0: APIキー設定 ===== -->
+<!-- ===== SCREEN 0: 起動キー ===== -->
 <div class="screen active" id="screen-api">
   <br>
-  <p class="tagline">🔑 SETUP</p>
-  <h1>まずは、カギをどうぞ</h1>
-  <p class="sub-text">Anthropic APIキーを入れると、扉が開きます。<br>このページの中だけで使う、ここだけの秘密です。</p>
+  <p class="tagline">🕹️ GAME START</p>
+  <h1>この怪しいマシン、<br>動かすにはカギがいります。</h1>
+  <p class="sub-text">Anthropic APIキーを入れると、マシンが唸り出します。<br>ここだけの秘密です。誰にも見せません、たぶん。</p>
+  <div class="coin-slot">🪙 → 🎰</div>
   <div class="field">
     <label>Anthropic API Key</label>
     <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off">
-    <div class="api-note">※ どこにも送信しません。約束します。</div>
+    <div class="api-note">※ どこにも送信しません。約束します（このマシン、口だけは達者です）。</div>
   </div>
-  <button class="btn btn-primary" onclick="startWithKey()">とびらを開ける</button>
+  <button class="btn btn-primary" onclick="startWithKey()">コインを投入する</button>
 </div>
 
 <!-- ===== SCREEN 1: スタート ===== -->
 <div class="screen" id="screen-start">
   <div class="start-visual">
-    <div class="start-visual-text">GENIUS FINDER v0.1</div>
+    <div class="start-visual-text">GENIUS FINDER — 爆笑鑑定機</div>
   </div>
   <p class="tagline">✨ ようこそ、GENIUS FINDERへ</p>
-  <h1>才能を証明する<br>場所ではありません。<br>変なところを拾う場所です。</h1>
-  <p class="sub-text" style="margin-top:8px">アートを見て、感じて、描く。その小さな反応から、自分でもまだ会ったことのない自分に出会いにいきます。</p>
-  <div class="humor">正解は存在しません。もし出てきたら、それは早とちりです。</div>
+  <h1>才能を証明する<br>場所ではありません。<br>変なところを拾って、笑う場所です。</h1>
+  <p class="sub-text" style="margin-top:8px">アートを見て、感じて、描く。その反応と、あなたが実際に描いた1枚から、奥に潜むこのマシンが全力でこじつけます。信じるかどうかはあなた次第。</p>
+  <div class="humor">正解は存在しません。もし出てきたら、それは早とちりです。ちなみに得点はあとで盛大に発表されます。</div>
   <div class="field">
-    <label>呼び名（なんでもOK）</label>
+    <label>プレイヤー名（呼び名、なんでもOK）</label>
     <input type="text" id="nickname" placeholder="例：たろう、みどり、謎の人...">
   </div>
   <div class="consent-item">
     <input type="checkbox" id="consent1">
-    <label for="consent1">アートへの反応や回答をもとに、GENIUS FINDERが仮説をつくることに同意します</label>
+    <label for="consent1">アートへの反応・回答・描いた絵をもとに、GENIUS FINDERが仮説（というかツッコミ）をつくることに同意します</label>
   </div>
   <div class="consent-item">
     <input type="checkbox" id="consent2">
-    <label for="consent2">これは診断ではなく「仮説」です。信じすぎず、疑いすぎず。</label>
+    <label for="consent2">これは診断ではなく「仮説」です。信じすぎず、疑いすぎず、なんなら笑って読んでください。</label>
   </div>
   <br>
-  <button class="btn btn-primary" onclick="goToArtSelect()">冒険をはじめる</button>
+  <button class="btn btn-primary" onclick="goToArtSelect()">冒険をはじめる（LV.1へ）</button>
 </div>
 
 <!-- ===== SCREEN 2: アート選択 ===== -->
 <div class="screen" id="screen-art">
+  <div class="sticker">直感ガチャ</div>
   <h2>🎨 ビビッときた3つは？</h2>
   <p class="sub-text">9作品の中から、気になる3つをタップ。<br>「好き」じゃなくても「なぜか気になる」で全然OKです。</p>
-  <div class="humor">迷った作品も、あなたをチラ見しています。</div>
+  <div class="humor">迷った作品も、あなたをチラ見しています。長押し（右クリック）で大きく見られます。</div>
   <div class="select-count">選択中：<span id="select-count">0</span> / 3</div>
   <div class="art-grid" id="art-grid"></div>
   <button class="btn btn-primary" id="btn-art-next" onclick="goToFocus()" disabled>この3つでいく！</button>
@@ -608,19 +861,24 @@
 
 <!-- ===== SCREEN 2.5: 気になる1枚 ===== -->
 <div class="screen" id="screen-focus">
+  <div class="sticker">運命の1枚</div>
   <h2>🔎 一番気になるのはどれ？</h2>
   <p class="sub-text">3つとも良い勝負ですが、ここから先はこの1枚を深掘りします。<br>残り2つは参考として覚えておきます。</p>
   <div class="art-grid" id="focus-grid" style="grid-template-columns:repeat(3,1fr)"></div>
   <button class="btn btn-primary" id="btn-focus-next" onclick="goToReflection()" disabled>これでいく！</button>
 </div>
 
-<!-- ===== SCREEN 3: 言語化 ===== -->
+<!-- ===== SCREEN 3: 尋問タイム ===== -->
 <div class="screen" id="screen-reflection">
+  <div class="sticker">尋問タイム</div>
   <h2>💭 感じたこと、正直に教えて</h2>
   <p class="sub-text">この1枚について、深く考えずに答えてください。<br>一瞬で出てきた言葉ほど、たぶん当たっています。</p>
   <div class="focus-art-display" id="focus-art-display"></div>
   <p class="other-arts-label">他に気になった作品</p>
   <div class="selected-arts-row" id="selected-arts-row"></div>
+
+  <div class="honesty-meter"><div class="honesty-fill" id="honesty-fill"></div></div>
+  <div class="honesty-label" id="honesty-label">ホンネ度 0%</div>
 
   <div class="question-block">
     <div class="question-label">Q1. 最初に目が行ったのはどんな要素？</div>
@@ -650,29 +908,30 @@
 
   <div class="question-block">
     <div class="question-label">Q3. なぜ惹かれたと思う？<br><small style="color:var(--sub);font-weight:400">正解は作者も知りません。</small></div>
-    <textarea id="answer-why" placeholder="直感でどうぞ。一言でも。"></textarea>
+    <textarea id="answer-why" oninput="updateHonestyMeter()" placeholder="直感でどうぞ。一言でも。"></textarea>
   </div>
 
   <div class="question-block">
     <div class="question-label">Q4. この作品の中に入るなら、何をする？</div>
-    <textarea id="answer-action" placeholder="例：ただ座っている、誰かを探す、走る..."></textarea>
+    <textarea id="answer-action" oninput="updateHonestyMeter()" placeholder="例：ただ座っている、誰かを探す、走る..."></textarea>
   </div>
 
   <div class="question-block">
     <div class="question-label">Q5. この作品に妙なタイトルをつけるなら？<br><small style="color:var(--sub);font-weight:400">まじめじゃなくていいです。むしろ変な方が歓迎。</small></div>
-    <textarea id="answer-title" placeholder="例：会議を救う宇宙人、怒っているプリン..."></textarea>
+    <textarea id="answer-title" oninput="updateHonestyMeter()" placeholder="例：会議を救う宇宙人、怒っているプリン..."></textarea>
   </div>
 
   <div class="question-block">
     <div class="question-label">Q6. 今の生活に持ち帰りたい要素は？</div>
-    <textarea id="answer-takeaway" placeholder="例：この色、この静けさ、この混沌..."></textarea>
+    <textarea id="answer-takeaway" oninput="updateHonestyMeter()" placeholder="例：この色、この静けさ、この混沌..."></textarea>
   </div>
 
-  <button class="btn btn-primary" onclick="goToTheme()">テーマを受け取りに行く</button>
+  <button class="btn btn-primary" onclick="goToTheme()">テーマを受け取りに行く（LV.4へ）</button>
 </div>
 
-<!-- ===== SCREEN 4: テーマ生成 ===== -->
+<!-- ===== SCREEN 4: お題ガチャ ===== -->
 <div class="screen" id="screen-theme">
+  <div class="sticker">お題ガチャ</div>
   <h2>🎁 あなただけのお題、届きました</h2>
   <p class="sub-text">回答をもとに、3つのテーマをひねり出しました。<br>一番ピンときたものを選んでください。</p>
   <div id="loading-theme">
@@ -680,22 +939,23 @@
     うんうん唸りながら考え中...
   </div>
   <div id="theme-cards" style="display:none"></div>
-  <button class="btn btn-primary" id="btn-theme-next" onclick="goToCreate()" style="display:none">これで描いてみる</button>
-  <button class="btn btn-ghost" id="btn-theme-random" onclick="loadThemes()" style="display:none">気分じゃない、別のを出して</button>
+  <button class="btn btn-primary" id="btn-theme-next" onclick="goToCreate()" style="display:none">これで描いてみる（LV.5へ）</button>
+  <button class="btn btn-ghost" id="btn-theme-random" onclick="loadThemes(true)" style="display:none">気分じゃない、別のを出して（ガチャ再挑戦）</button>
 </div>
 
-<!-- ===== SCREEN 5: 創作 ===== -->
+<!-- ===== SCREEN 5: 証拠提出（描く） ===== -->
 <div class="screen" id="screen-create">
+  <div class="evidence-tag">🕵️ 証拠品 No.05 — 本番はここ</div>
   <h2>✏️ さあ、描いてみよう</h2>
   <div id="selected-theme-display" style="background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:16px;">
     <div style="font-size:11px;color:var(--accent);letter-spacing:0.1em;margin-bottom:4px">テーマ</div>
-    <div id="theme-text-display" style="font-size:18px;font-weight:700"></div>
+    <div id="theme-text-display" style="font-size:18px;font-weight:800"></div>
   </div>
-  <p class="sub-text">紙に描いて、撮影してアップロードしてください。<br>うまく描けたらすごい。うまく描けなくても、むしろ情報量は多い。</p>
-  <div class="humor">白紙も作品です。ただし撮影するとスマホが"机"を作品だと思うことがあります。</div>
+  <p class="sub-text">紙に描いて、撮影してアップロードしてください。<br>この絵が鑑定の主役です。テキストの回答はぜんぶ脇役。</p>
+  <div class="humor">白紙も作品です。ただし撮影するとスマホが「机」を作品だと誤解することがあります。うまく描けなくてもむしろ情報量は多いので歓迎です。</div>
 
   <div class="timer-display" id="timer-display">5:00</div>
-  <div class="timer-label">タイマー（使っても使わなくても）</div>
+  <div class="timer-label">尋問タイマー（使っても使わなくても）</div>
   <div style="display:flex;gap:8px;margin-bottom:20px">
     <button class="btn btn-secondary" style="flex:1;padding:10px" onclick="startTimer()">▶ スタート</button>
     <button class="btn btn-secondary" style="flex:1;padding:10px" onclick="resetTimer()">↺ リセット</button>
@@ -704,30 +964,35 @@
   <img id="preview-img" alt="アップロードされた作品">
   <div class="upload-area" onclick="document.getElementById('upload-input').click()">
     <div class="upload-icon">📷</div>
-    <p>撮れたら見せてください</p>
-    <p style="font-size:12px;margin-top:4px">タップしてカメラまたはアルバムを選択</p>
+    <p class="upload-main">証拠写真を撮る／選ぶ</p>
+    <p>タップしてカメラまたはアルバムを選択</p>
   </div>
   <input type="file" id="upload-input" accept="image/*" capture="environment" onchange="handleUpload(event)">
 
   <div class="question-block" style="margin-top:16px">
-    <div class="question-label">描き終えて：一番「自分っぽい」と思う部分は？</div>
+    <div class="question-label">描き終えて：一番「自分っぽい」と思う部分は？（補足情報です）</div>
     <textarea id="answer-selflike" placeholder="どこでも、一言でも。"></textarea>
   </div>
 
-  <button class="btn btn-primary" id="btn-create-next" onclick="goToHypothesis()">できあがりを見てみる</button>
+  <button class="btn btn-primary" id="btn-create-next" onclick="goToHypothesis()">鑑定してもらう（LV.6へ）</button>
 </div>
 
-<!-- ===== SCREEN 6: 仮説 ===== -->
+<!-- ===== SCREEN 6: AI鑑定 / ガチャ ===== -->
 <div class="screen" id="screen-hypothesis">
   <div id="loading-hypothesis">
     <br><br>
     <div class="spinner"></div>
-    <div class="loading-text">あなたの反応、じっくり読み解いてます...<br><br>
-    それっぽいことを言おうとしています。<br>違ったら遠慮なく赤ペン先生を。</div>
+    <div class="loading-text" id="loading-cycle-text">あなたの絵、じっくり見てます...</div>
+  </div>
+  <div id="gacha-wrap" class="gacha-wrap" style="display:none">
+    <h2>🎉 鑑定、できました</h2>
+    <p class="sub-text">カプセルの中に、あなたのGENIUSが入っています。</p>
+    <button class="btn-gacha" id="gacha-open-btn" onclick="openCapsule()">開ける</button>
+    <div class="gacha-hint">タップしてカプセルを開封</div>
   </div>
   <div id="hypothesis-content" style="display:none">
     <h2>🔍 見つかった、あなたのカケラ</h2>
-    <p class="sub-text">あくまで仮説です。違ったら遠慮なくツッコんでください。</p>
+    <p class="sub-text">あくまで仮説（というかツッコミ）です。違ったら遠慮なく反論してください。</p>
     <div class="hypothesis-box" id="hyp-box"></div>
 
     <h2 style="margin-bottom:12px">これ、当たってる？</h2>
@@ -753,7 +1018,7 @@
       </div>
     </div>
 
-    <button class="btn btn-primary" onclick="goToCard()">カードを受け取りに行く</button>
+    <button class="btn btn-primary" onclick="goToCard()">鑑定書を受け取りに行く（LV.7）</button>
   </div>
 </div>
 
@@ -762,8 +1027,10 @@
   <h2>🎉 今日のあなた、できました</h2>
   <p class="sub-text">あなたのGENIUS、いったん仮置きしました。<br>持ち逃げOKです。</p>
   <div class="genius-card" id="genius-card">
-    <div class="card-eyebrow">MY GENIUS CARD — v0.1</div>
+    <div class="card-eyebrow"><span>MY GENIUS CARD</span><span id="card-rarity"></span></div>
+    <div class="card-image-wrap" id="card-image-wrap"></div>
     <div class="card-genius-name" id="card-name"></div>
+    <div class="card-stats" id="card-stats"></div>
     <div class="card-row">
       <div class="card-row-label">WANTS — 内側から求めていること</div>
       <div class="card-row-value" id="card-wants"></div>
@@ -792,11 +1059,17 @@
       <div class="card-row-label">CURRENT QUEST — 今試したいこと</div>
       <div class="card-row-value" id="card-quest"></div>
     </div>
+    <div class="card-row">
+      <div class="card-row-label">🏆 実績</div>
+      <div class="card-achievements" id="card-achievements"></div>
+    </div>
     <div class="card-version" id="card-date"></div>
   </div>
   <p class="share-note">スクショで保存・自慢してOKです</p>
-  <button class="btn btn-secondary" onclick="resetAll()">もう一回、遊んでみる</button>
+  <button class="btn btn-secondary" onclick="resetAll()">もう一回、ガチャを回す</button>
 </div>
+
+<div id="confetti-layer"></div>
 
 <script>
 // ===== 状態管理 =====
@@ -810,11 +1083,24 @@ const state = {
   uploadedImage: null,
   hypothesis: null,
   reaction: '',
-  reactionNote: ''
+  reactionNote: '',
+  timerUsed: false,
+  themeRerolls: 0,
+  selectionResets: 0,
+  createStartTime: null,
+  createEndTime: null
 };
 
 let timerInterval = null;
 let timerSeconds = 300;
+let loadingCycleInterval = null;
+
+// ===== チーム共有レビュー用の一時キー =====
+// レビュー期間だけ使う低クレジット枠のキーをここに貼り付けると、
+// APIキー入力欄に自動で入力された状態でこのファイルを配ることができます。
+// （このファイルはブラウザから直接APIを呼ぶ設計のため、貼り付けたキーは
+// 　開発者ツールから誰でも見えます。レビューが終わったらAnthropic Consoleで必ず失効させてください）
+const TEAM_REVIEW_KEY = '';
 
 // ===== アート作品データ（base64埋め込み） =====
 const artworks = [
@@ -831,7 +1117,8 @@ const artworks = [
 
 // ===== 画面遷移ユーティリティ =====
 const screens = ['screen-api','screen-start','screen-art','screen-focus','screen-reflection','screen-theme','screen-create','screen-hypothesis','screen-card'];
-const stepLabels = ['','','ビビッとくる3つ','気になる1枚','感じたこと語る','お題を受け取る','描いてみる','仮説をチェック','発見カード'];
+const stepLabels = ['','起動完了','直感ガチャ中','運命の1枚を選択中','尋問タイム進行中','お題ガチャ開封中','証拠を描画中','マシン唸り中','クリア！'];
+const levelLabels = ['LV.0','LV.1','LV.2','LV.3','LV.4','LV.5','LV.6','LV.7','CLEAR'];
 const progressMap = [0, 5, 15, 25, 45, 60, 70, 85, 100];
 
 function showScreen(id) {
@@ -839,11 +1126,18 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
   const idx = screens.indexOf(id);
   document.getElementById('step-label').textContent = stepLabels[idx] || '';
+  document.getElementById('level-badge').textContent = levelLabels[idx] || '';
   document.getElementById('progress-fill').style.width = progressMap[idx] + '%';
   window.scrollTo(0, 0);
 }
 
-// ===== SCREEN 0: APIキー =====
+// ===== SCREEN 0: 起動キー =====
+if (TEAM_REVIEW_KEY) {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('api-key-input').value = TEAM_REVIEW_KEY;
+  });
+}
+
 function startWithKey() {
   const key = document.getElementById('api-key-input').value.trim();
   if (!key.startsWith('sk-')) {
@@ -912,6 +1206,7 @@ function clearSelection() {
     const n = document.getElementById('num-' + id);
     if (n) n.remove();
   });
+  if (state.selectedArts.length > 0) state.selectionResets++;
   state.selectedArts = [];
   document.getElementById('select-count').textContent = '0';
   document.getElementById('btn-art-next').disabled = true;
@@ -952,7 +1247,7 @@ function pickFocus(id) {
   document.getElementById('btn-focus-next').disabled = false;
 }
 
-// ===== SCREEN 3: 言語化 =====
+// ===== SCREEN 3: 尋問タイム =====
 function goToReflection() {
   if (!state.focusArt) return;
   const focus = artworks.find(a => a.id === state.focusArt);
@@ -965,11 +1260,13 @@ function goToReflection() {
     return `<div class="art-thumb"><img src="${art.src}" alt="${art.title}"></div>`;
   }).join('');
 
+  updateHonestyMeter();
   showScreen('screen-reflection');
 }
 
 function toggleTag(el) {
   el.classList.toggle('selected');
+  updateHonestyMeter();
 }
 
 function getSelectedTags(containerId) {
@@ -977,7 +1274,23 @@ function getSelectedTags(containerId) {
     .map(el => el.textContent);
 }
 
-// ===== SCREEN 4: テーマ生成 =====
+function updateHonestyMeter() {
+  const fields = [
+    getSelectedTags('tags-focus').length > 0,
+    getSelectedTags('tags-mood').length > 0,
+    document.getElementById('answer-why').value.trim().length > 0,
+    document.getElementById('answer-action').value.trim().length > 0,
+    document.getElementById('answer-title').value.trim().length > 0,
+    document.getElementById('answer-takeaway').value.trim().length > 0,
+  ];
+  const filled = fields.filter(Boolean).length;
+  const pct = Math.round((filled / fields.length) * 100);
+  document.getElementById('honesty-fill').style.width = pct + '%';
+  const label = pct === 100 ? 'ホンネ度 100%（もう隠せてない）' : `ホンネ度 ${pct}%`;
+  document.getElementById('honesty-label').textContent = label;
+}
+
+// ===== SCREEN 4: お題ガチャ =====
 async function goToTheme() {
   state.reflectionData = {
     focus: getSelectedTags('tags-focus'),
@@ -988,10 +1301,11 @@ async function goToTheme() {
     takeaway: document.getElementById('answer-takeaway').value,
   };
   showScreen('screen-theme');
-  await loadThemes();
+  await loadThemes(false);
 }
 
-async function loadThemes() {
+async function loadThemes(isReroll) {
+  if (isReroll) state.themeRerolls++;
   document.getElementById('loading-theme').style.display = 'block';
   document.getElementById('theme-cards').style.display = 'none';
   document.getElementById('btn-theme-next').style.display = 'none';
@@ -1058,16 +1372,18 @@ function selectTheme(idx, title, el) {
   document.getElementById('btn-theme-next').style.display = 'block';
 }
 
-// ===== SCREEN 5: 創作 =====
+// ===== SCREEN 5: 証拠提出（描く） =====
 function goToCreate() {
   if (!state.selectedTheme) { alert('テーマを選んでください'); return; }
   document.getElementById('theme-text-display').textContent = state.selectedTheme;
   resetTimer();
+  state.createStartTime = Date.now();
   showScreen('screen-create');
 }
 
 // タイマー
 function startTimer() {
+  state.timerUsed = true;
   if (timerInterval) return;
   timerInterval = setInterval(() => {
     if (timerSeconds <= 0) {
@@ -1105,32 +1421,83 @@ function handleUpload(event) {
   reader.readAsDataURL(file);
 }
 
-// ===== SCREEN 6: 仮説 =====
+// ===== SCREEN 6: AI鑑定 / ガチャ =====
+const loadingCycleTexts = [
+  '線の震え具合を測定中…',
+  '隠れた才能を検出中…',
+  '謎の渦を解析中…',
+  'その落書き、本気で見てます…',
+  '余白の使い方を採点中…',
+  'もう少しでツッコミが漏れます…',
+  '筆圧からやる気を逆算中…',
+  '証拠写真、なめるように確認中…'
+];
+function startLoadingCycle() {
+  let i = 0;
+  const el = document.getElementById('loading-cycle-text');
+  el.textContent = loadingCycleTexts[0];
+  loadingCycleInterval = setInterval(() => {
+    i = (i + 1) % loadingCycleTexts.length;
+    el.textContent = loadingCycleTexts[i];
+  }, 1400);
+}
+function stopLoadingCycle() {
+  clearInterval(loadingCycleInterval);
+  loadingCycleInterval = null;
+}
+
 async function goToHypothesis() {
+  if (!state.uploadedImage) {
+    alert('証拠（あなたが描いた絵の写真）がないと鑑定できません！撮影してアップロードしてください。');
+    return;
+  }
   state.reflectionData.selflike = document.getElementById('answer-selflike').value;
+  state.createEndTime = Date.now();
   showScreen('screen-hypothesis');
   document.getElementById('loading-hypothesis').style.display = 'block';
+  document.getElementById('gacha-wrap').style.display = 'none';
   document.getElementById('hypothesis-content').style.display = 'none';
+  startLoadingCycle();
 
   await generateHypothesis();
+}
+
+function fallbackHypothesis() {
+  return {
+    drawingObservation: ['画面のどこかに主役っぽいモチーフが1つ', '余白の使い方に妙なクセ', '線の勢いに正直な性格が出ている'],
+    drawingRoast: 'その絵、たぶん本人が思っている10倍面白いです。',
+    geniusName: '形にならないものを形にする人',
+    hypothesis: 'あなたは「まだ言葉になっていないもの」に強く反応するタイプっぽいです。決まった正解より、その手前の余白や可能性を大事にしたい人なのかも。',
+    wants: '何かをきっちり完成させることより、「途中の状態」に意味を見出したいのかもしれません。',
+    being: '答えを急かされず、自分のペースで探索できるとき、自然体でいられそうです。',
+    geniusMoves: ['余白から始める', '途中に留まる', '名前をつけ直す'],
+    energySource: '「まだ誰も決めていないこと」に出会ったとき、たぶん火がつきます。',
+    energyLeak: '正解を急かされる環境だと、しぼんでしまうかもしれません。',
+    oddCharm: '白紙を渡されても、なぜか一番楽しそうにしているタイプ。',
+    quest: '今日、完成させなくていいものを一つ始めてみてください。',
+    evidence: ['余白・空間に目が行った選択から', `「${state.selectedTheme}」というテーマへの反応から`, '持ち帰りたい要素の回答から'],
+    geniusScore: 62, chaosScore: 55, funnyScore: 58
+  };
 }
 
 async function generateHypothesis() {
   const focusTitle = artworks.find(a => a.id === state.focusArt)?.title || '';
   const otherTitles = state.selectedArts.filter(id => id !== state.focusArt).map(id => artworks.find(a => a.id === id).title);
 
-  const systemPrompt = `あなたはGENIUS FINDERのAIコーチです。親しみやすく、少しズレていて、押しつけがましくない先生のような存在。
-ユーザーのアートへの反応・言語化・創作から、その人固有のWants・Being・Geniusを仮説として提示します。
+  const systemPrompt = `あなたはGENIUS FINDERのAI鑑定士。お笑い芸人のツッコミ的センスを持つ、親しみやすくて少しズレた先生のような存在。
+最大の仕事は「ユーザーが実際に紙に描いて撮影した1枚の絵」を隅々まで観察し、そこから読み取れることを面白おかしく仮説にすること。
+テキストの回答（アートへの反応・自己申告）は、あくまで画像の解釈を補強するための補足情報。画像とテキストが食い違ったら画像を信じる。
 
 口調のルール（重要）：
 - 「〜と考えられます」「〜と推察されます」のような硬い言い回しは禁止。「〜かも」「〜っぽい」「〜な気がする」くらいの、友達に話すようなくだけた温かさで
 - 一文は短く、テンポよく。説教くさくしない
-- 気の利いた比喩やちょっとした遊び心をどこかに1つは入れる
-- ただし本人・作品・属性を笑いの対象にしない。ユーモアは「緊張をゆるめる」ためだけに使う
+- 具体的に「絵の中の何を見てそう思ったか」に必ず触れる（例：「画面の右上に寄った、あの小さい丸」のように）
+- 気の利いた比喩やユーモアをふんだんに。愛のあるツッコミ・ボケを歓迎
+- ただし本人の外見・属性・能力を笑いの対象にしない。ユーモアは常に「絵そのもの」（線、構図、モチーフ、余白、勢い）に向ける
 
 原則：
 - 断定しない。「〜かもしれません」「〜という傾向が見えます」という仮説形式で
-- 根拠を必ず示す（どの回答・選択から読み取ったか）
+- 根拠を必ず示す（特に、絵のどの部分から読み取ったか）
 - 「あなたは〇〇型です」と固定ラベルを貼らない
 - 弱みを強みに無理やり変換しない
 - 診断・病名・性格タイプ・発達特性・知能・政治宗教等のセンシティブ属性には一切言及しない`;
@@ -1138,11 +1505,16 @@ async function generateHypothesis() {
   const userPrompt = `
 以下のユーザーデータから、GENIUS仮説を生成してください。
 
-## 選んだ作品
-- 一番気になった作品（以下の反応はすべてこの作品について）: ${focusTitle}
-- 他に気になった作品（参考情報）: ${otherTitles.join('、') || 'なし'}
+## 最重要指示
+これから送る画像は、ユーザーが実際に紙に描いた作品の写真です。何よりも最優先の手がかりとして分析してください。
+以下のテキスト回答は、画像を読み解くための「補足のヒント」に過ぎません。テキストと画像の内容が食い違う場合は、画像を信じてください。
+まず画像を見て、具体的に何が描かれているか（モチーフ、線の勢い、余白の使い方、配置の偏り、濃淡）を観察し、drawingObservationに反映してください。
 
-## アートへの反応
+## 選んだ作品（参考情報）
+- 一番気になった作品（以下の反応はすべてこの作品について）: ${focusTitle}
+- 他に気になった作品: ${otherTitles.join('、') || 'なし'}
+
+## アートへの反応（参考情報）
 - 目が行ったもの: ${state.reflectionData.focus?.join('、') || '未回答'}
 - 気分: ${state.reflectionData.mood?.join('、') || '未回答'}
 - なぜ惹かれたか: ${state.reflectionData.why || '未回答'}
@@ -1150,14 +1522,16 @@ async function generateHypothesis() {
 - つけた妙なタイトル: ${state.reflectionData.title || '未回答'}
 - 持ち帰りたい要素: ${state.reflectionData.takeaway || '未回答'}
 
-## 創作
+## 創作（参考情報）
 - テーマ: ${state.selectedTheme}
-- 一番自分っぽい部分: ${state.reflectionData.selflike || '未回答'}
+- 一番自分っぽい部分（自己申告）: ${state.reflectionData.selflike || '未回答'}
 
 ## 出力形式（JSON）
 {
+  "drawingObservation": ["画像から観察した具体的なポイント1（20文字程度）", "観察ポイント2", "観察ポイント3"],
+  "drawingRoast": "その絵ならではの具体的な部分に触れた、愛のあるツッコミ一言（1〜2文、思わずクスッとするように）",
   "geniusName": "あなたらしさを表す一言（動詞を含む15文字以内のフレーズ）",
-  "hypothesis": "2〜3文で仮説を説明。友達に話すくらいのくだけたトーンで",
+  "hypothesis": "2〜3文で仮説を説明。必ず絵の具体的な特徴に触れること。友達に話すくらいのくだけたトーンで",
   "wants": "内側から求めていること（1〜2文）",
   "being": "自然でいられる状態・条件（1〜2文）",
   "geniusMoves": ["動詞フレーズ1", "動詞フレーズ2", "動詞フレーズ3"],
@@ -1165,7 +1539,10 @@ async function generateHypothesis() {
   "energyLeak": "しぼむ条件・環境。欠点ではなく「合わない環境」として書く（1文）",
   "oddCharm": "本人らしい妙な魅力やユーモラスな一面（1文、思わずクスッとするように）",
   "quest": "今日から試せる小さな行動（1文）",
-  "evidence": ["根拠1（どの回答から）", "根拠2", "根拠3"]
+  "evidence": ["根拠1（できるだけ絵のどの部分からか）", "根拠2", "根拠3"],
+  "geniusScore": "天才度、0〜100の整数",
+  "chaosScore": "カオス度、0〜100の整数",
+  "funnyScore": "ツッコミ度、0〜100の整数"
 }
 
 JSONのみ返してください。`;
@@ -1185,29 +1562,70 @@ JSONのみ返してください。`;
     const res = await callClaude(userPrompt, true, systemPrompt, content);
     const json = JSON.parse(res.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());
     state.hypothesis = json;
-    renderHypothesis(json);
   } catch(e) {
     console.error(e);
-    // フォールバック仮説
-    state.hypothesis = {
-      geniusName: '形にならないものを形にする人',
-      hypothesis: 'あなたは「まだ言葉になっていないもの」に強く反応するタイプっぽいです。決まった正解より、その手前の余白や可能性を大事にしたい人なのかも。',
-      wants: '何かをきっちり完成させることより、「途中の状態」に意味を見出したいのかもしれません。',
-      being: '答えを急かされず、自分のペースで探索できるとき、自然体でいられそうです。',
-      geniusMoves: ['余白から始める', '途中に留まる', '名前をつけ直す'],
-      energySource: '「まだ誰も決めていないこと」に出会ったとき、たぶん火がつきます。',
-      energyLeak: '正解を急かされる環境だと、しぼんでしまうかもしれません。',
-      oddCharm: '白紙を渡されても、なぜか一番楽しそうにしているタイプ。',
-      quest: '今日、完成させなくていいものを一つ始めてみてください。',
-      evidence: ['余白・空間に目が行った選択から', `「${state.selectedTheme}」というテーマへの反応から`, '持ち帰りたい要素の回答から']
-    };
-    renderHypothesis(state.hypothesis);
+    state.hypothesis = fallbackHypothesis();
+  }
+  stopLoadingCycle();
+  document.getElementById('loading-hypothesis').style.display = 'none';
+  document.getElementById('gacha-wrap').style.display = 'block';
+}
+
+function computeRarity(h) {
+  const score = ((h.geniusScore||50) + (h.chaosScore||50) + (h.funnyScore||50)) / 3;
+  if (score >= 85) return 'UR';
+  if (score >= 70) return 'SSR';
+  if (score >= 55) return 'SR';
+  if (score >= 35) return 'R';
+  return 'N';
+}
+
+function spawnConfetti() {
+  const layer = document.getElementById('confetti-layer');
+  const emojis = ['🎉','✨','🎊','⭐','💥','🌟'];
+  for (let i = 0; i < 26; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.animationDuration = (1.6 + Math.random() * 1.4) + 's';
+    piece.style.fontSize = (14 + Math.random() * 14) + 'px';
+    layer.appendChild(piece);
+    piece.addEventListener('animationend', () => piece.remove());
   }
 }
 
+function openCapsule() {
+  document.getElementById('gacha-wrap').style.display = 'none';
+  document.getElementById('hypothesis-content').style.display = 'block';
+  spawnConfetti();
+  renderHypothesis(state.hypothesis);
+}
+
 function renderHypothesis(h) {
+  const rarity = computeRarity(h);
   const box = document.getElementById('hyp-box');
   box.innerHTML = `
+    <div class="rarity-badge rarity-${rarity}">★ ${rarity} 判定</div>
+    ${state.uploadedImage ? `<img class="drawing-evidence" src="${state.uploadedImage}" alt="提出された作品">` : ''}
+    <div class="stat-row">
+      <div class="stat-head"><span>天才度</span><b>${h.geniusScore ?? '--'}</b></div>
+      <div class="stat-bar"><div class="stat-fill genius" style="width:${h.geniusScore ?? 50}%"></div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-head"><span>カオス度</span><b>${h.chaosScore ?? '--'}</b></div>
+      <div class="stat-bar"><div class="stat-fill chaos" style="width:${h.chaosScore ?? 50}%"></div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-head"><span>ツッコミ度</span><b>${h.funnyScore ?? '--'}</b></div>
+      <div class="stat-bar"><div class="stat-fill funny" style="width:${h.funnyScore ?? 50}%"></div></div>
+    </div>
+    ${h.drawingObservation ? `
+    <div class="observation-log">
+      <div class="observation-log-title">🔍 マシンが目撃した、動かぬ証拠</div>
+      ${h.drawingObservation.map(o => `<div class="observation-item">${o}</div>`).join('')}
+    </div>` : ''}
+    ${h.drawingRoast ? `<div class="roast-box">${h.drawingRoast}</div>` : ''}
     <div class="hyp-section">
       <div class="hyp-label">GENIUS NAME</div>
       <div class="hyp-name">${h.geniusName}</div>
@@ -1244,8 +1662,6 @@ function renderHypothesis(h) {
       </div>
     </div>
   `;
-  document.getElementById('loading-hypothesis').style.display = 'none';
-  document.getElementById('hypothesis-content').style.display = 'block';
 }
 
 function selectReaction(type, el) {
@@ -1271,13 +1687,44 @@ function selectReaction(type, el) {
   }
 }
 
+// ===== 実績（ゲーム要素） =====
+function computeAchievements() {
+  const list = [];
+  const drawSeconds = (state.createStartTime && state.createEndTime) ? Math.round((state.createEndTime - state.createStartTime) / 1000) : null;
+  if (drawSeconds !== null && drawSeconds <= 60) list.push({ icon: '⚡', label: '秒速仕上げ' });
+  if (state.timerUsed) list.push({ icon: '⏳', label: 'タイマー使用者' });
+  if (state.themeRerolls > 0) list.push({ icon: '🎲', label: `お題を${state.themeRerolls}回引き直した` });
+  if (state.selectionResets > 0) list.push({ icon: '🔄', label: '選び直しの美学' });
+  if (state.reaction === 'disagree') list.push({ icon: '😤', label: '反骨精神' });
+  if (state.reaction === 'agree') list.push({ icon: '🎯', label: '一発的中' });
+  if (list.length === 0) list.push({ icon: '🌱', label: 'まっすぐ挑戦' });
+  return list;
+}
+
 // ===== SCREEN 7: 発見カード =====
 function goToCard() {
   state.reactionNote = document.getElementById('reaction-text').value;
   const h = state.hypothesis;
   if (!h) return;
+  const rarity = computeRarity(h);
 
+  document.getElementById('card-rarity').innerHTML = `<span class="rarity-badge rarity-${rarity}">★ ${rarity}</span>`;
+  document.getElementById('card-image-wrap').innerHTML = state.uploadedImage
+    ? `<img src="${state.uploadedImage}" alt="提出された作品">` : '';
   document.getElementById('card-name').textContent = h.geniusName;
+  document.getElementById('card-stats').innerHTML = `
+    <div class="stat-row">
+      <div class="stat-head"><span>天才度</span><b>${h.geniusScore ?? '--'}</b></div>
+      <div class="stat-bar"><div class="stat-fill genius" style="width:${h.geniusScore ?? 50}%"></div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-head"><span>カオス度</span><b>${h.chaosScore ?? '--'}</b></div>
+      <div class="stat-bar"><div class="stat-fill chaos" style="width:${h.chaosScore ?? 50}%"></div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-head"><span>ツッコミ度</span><b>${h.funnyScore ?? '--'}</b></div>
+      <div class="stat-bar"><div class="stat-fill funny" style="width:${h.funnyScore ?? 50}%"></div></div>
+    </div>`;
   document.getElementById('card-wants').textContent = h.wants;
   document.getElementById('card-being').textContent = h.being;
   document.getElementById('card-moves').textContent = h.geniusMoves.join(' · ');
@@ -1291,10 +1738,14 @@ function goToCard() {
   }
   document.getElementById('card-quest').textContent = quest;
 
+  document.getElementById('card-achievements').innerHTML = computeAchievements()
+    .map(a => `<span class="achievement-pill">${a.icon} ${a.label}</span>`).join('');
+
   const now = new Date();
   document.getElementById('card-date').textContent = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} — ${state.nickname}`;
 
   showScreen('screen-card');
+  spawnConfetti();
 }
 
 // ===== Claude API呼び出し =====
@@ -1340,6 +1791,11 @@ function resetAll() {
   state.hypothesis = null;
   state.reaction = '';
   state.reactionNote = '';
+  state.timerUsed = false;
+  state.themeRerolls = 0;
+  state.selectionResets = 0;
+  state.createStartTime = null;
+  state.createEndTime = null;
   document.getElementById('preview-img').style.display = 'none';
   document.getElementById('preview-img').src = '';
   document.getElementById('upload-input').value = '';
