@@ -520,6 +520,31 @@
     transition: width 0.3s ease;
   }
 
+  /* ── 戻るバー ── */
+  .subheader { padding: 8px 20px 0; }
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--sub);
+    font-size: 13px;
+    padding: 6px 4px;
+    cursor: pointer;
+  }
+  .back-btn:active { opacity: 0.6; }
+
+  /* ── エラー通知 ── */
+  .error-banner {
+    background: rgba(255,107,122,0.12);
+    border: 1px solid var(--danger);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .error-banner .btn { margin-top: 10px; }
+
   /* ── 同意チェック ── */
   .consent-item {
     display: flex;
@@ -549,6 +574,9 @@
   <div class="logo">GENIUS FINDER</div>
   <div class="step-indicator" id="step-label"></div>
 </div>
+<div class="subheader" id="back-bar" style="display:none">
+  <button class="back-btn" onclick="goBack()">← ひとつ戻る</button>
+</div>
 
 <!-- ===== SCREEN 0: APIキー設定 ===== -->
 <div class="screen active" id="screen-api">
@@ -575,7 +603,7 @@
   <div class="humor">正解は存在しません。もし出てきたら、それは早とちりです。</div>
   <div class="field">
     <label>呼び名（なんでもOK）</label>
-    <input type="text" id="nickname" placeholder="例：たろう、みどり、謎の人...">
+    <input type="text" id="nickname" placeholder="例：たろう、みどり、謎の人..." oninput="autosaveNickname(this.value)">
   </div>
   <div class="consent-item">
     <input type="checkbox" id="consent1">
@@ -587,6 +615,7 @@
   </div>
   <br>
   <button class="btn btn-primary" onclick="goToArtSelect()">冒険をはじめる</button>
+  <button class="btn btn-ghost" onclick="changeApiKey()">🔑 APIキーを変更</button>
 </div>
 
 <!-- ===== SCREEN 2: アート選択 ===== -->
@@ -650,22 +679,22 @@
 
   <div class="question-block">
     <div class="question-label">Q3. なぜ惹かれたと思う？<br><small style="color:var(--sub);font-weight:400">正解は作者も知りません。</small></div>
-    <textarea id="answer-why" placeholder="直感でどうぞ。一言でも。"></textarea>
+    <textarea id="answer-why" placeholder="直感でどうぞ。一言でも。" oninput="autosaveField('why', this.value)"></textarea>
   </div>
 
   <div class="question-block">
     <div class="question-label">Q4. この作品の中に入るなら、何をする？</div>
-    <textarea id="answer-action" placeholder="例：ただ座っている、誰かを探す、走る..."></textarea>
+    <textarea id="answer-action" placeholder="例：ただ座っている、誰かを探す、走る..." oninput="autosaveField('action', this.value)"></textarea>
   </div>
 
   <div class="question-block">
     <div class="question-label">Q5. この作品に妙なタイトルをつけるなら？<br><small style="color:var(--sub);font-weight:400">まじめじゃなくていいです。むしろ変な方が歓迎。</small></div>
-    <textarea id="answer-title" placeholder="例：会議を救う宇宙人、怒っているプリン..."></textarea>
+    <textarea id="answer-title" placeholder="例：会議を救う宇宙人、怒っているプリン..." oninput="autosaveField('title', this.value)"></textarea>
   </div>
 
   <div class="question-block">
     <div class="question-label">Q6. 今の生活に持ち帰りたい要素は？</div>
-    <textarea id="answer-takeaway" placeholder="例：この色、この静けさ、この混沌..."></textarea>
+    <textarea id="answer-takeaway" placeholder="例：この色、この静けさ、この混沌..." oninput="autosaveField('takeaway', this.value)"></textarea>
   </div>
 
   <button class="btn btn-primary" onclick="goToTheme()">テーマを受け取りに行く</button>
@@ -678,6 +707,10 @@
   <div id="loading-theme">
     <div class="spinner"></div>
     うんうん唸りながら考え中...
+  </div>
+  <div id="theme-error" class="error-banner" style="display:none">
+    <span id="theme-error-text"></span>
+    <button class="btn btn-secondary" onclick="loadThemes()">もう一度試す</button>
   </div>
   <div id="theme-cards" style="display:none"></div>
   <button class="btn btn-primary" id="btn-theme-next" onclick="goToCreate()" style="display:none">これで描いてみる</button>
@@ -711,7 +744,7 @@
 
   <div class="question-block" style="margin-top:16px">
     <div class="question-label">描き終えて：一番「自分っぽい」と思う部分は？</div>
-    <textarea id="answer-selflike" placeholder="どこでも、一言でも。"></textarea>
+    <textarea id="answer-selflike" placeholder="どこでも、一言でも。" oninput="autosaveField('selflike', this.value)"></textarea>
   </div>
 
   <button class="btn btn-primary" id="btn-create-next" onclick="goToHypothesis()">できあがりを見てみる</button>
@@ -728,6 +761,10 @@
   <div id="hypothesis-content" style="display:none">
     <h2>🔍 見つかった、あなたのカケラ</h2>
     <p class="sub-text">あくまで仮説です。違ったら遠慮なくツッコんでください。</p>
+    <div id="hypothesis-error" class="error-banner" style="display:none">
+      <span id="hypothesis-error-text"></span>
+      <button class="btn btn-secondary" onclick="retryHypothesis()">もう一度試す</button>
+    </div>
     <div class="hypothesis-box" id="hyp-box"></div>
 
     <h2 style="margin-bottom:12px">これ、当たってる？</h2>
@@ -807,6 +844,7 @@ const state = {
   focusArt: null,
   reflectionData: {},
   selectedTheme: '',
+  themesShown: null,
   uploadedImage: null,
   hypothesis: null,
   reaction: '',
@@ -815,6 +853,14 @@ const state = {
 
 let timerInterval = null;
 let timerSeconds = 300;
+let screenHistory = [];
+
+// ===== テーマの3タイプ（ここを編集すれば増減・言い回し変更が全画面に反映される） =====
+const THEME_CATEGORIES = [
+  { key: 'normal',   label: 'ノーマル',      guide: '直感的でわかりやすい、王道の切り口。誰でもすぐ描き始められるもの' },
+  { key: 'creative', label: 'クリエイティブ', guide: '発想を広げる、少し抽象的・詩的な切り口。解釈の余地があるもの' },
+  { key: 'comedy',   label: 'コメディ',      guide: 'ユーモラスで意外性のある、肩の力が抜ける切り口（例：「怒っているプリン」「会議を救う宇宙人」のようなもの）' },
+];
 
 // ===== アート作品データ（base64埋め込み） =====
 const artworks = [
@@ -834,13 +880,145 @@ const screens = ['screen-api','screen-start','screen-art','screen-focus','screen
 const stepLabels = ['','','ビビッとくる3つ','気になる1枚','感じたこと語る','お題を受け取る','描いてみる','仮説をチェック','発見カード'];
 const progressMap = [0, 5, 15, 25, 45, 60, 70, 85, 100];
 
-function showScreen(id) {
+function showScreen(id, opts = {}) {
+  const { pushHistory = true } = opts;
+  const current = screens.find(s => document.getElementById(s).classList.contains('active'));
+  if (pushHistory && current && current !== id) {
+    screenHistory.push(current);
+  }
   screens.forEach(s => document.getElementById(s).classList.remove('active'));
   document.getElementById(id).classList.add('active');
   const idx = screens.indexOf(id);
   document.getElementById('step-label').textContent = stepLabels[idx] || '';
   document.getElementById('progress-fill').style.width = progressMap[idx] + '%';
+  document.getElementById('back-bar').style.display = (screenHistory.length > 0) ? 'block' : 'none';
   window.scrollTo(0, 0);
+  saveProgress();
+}
+
+function goBack() {
+  if (screenHistory.length === 0) return;
+  const prev = screenHistory.pop();
+  screens.forEach(s => document.getElementById(s).classList.remove('active'));
+  document.getElementById(prev).classList.add('active');
+  const idx = screens.indexOf(prev);
+  document.getElementById('step-label').textContent = stepLabels[idx] || '';
+  document.getElementById('progress-fill').style.width = progressMap[idx] + '%';
+  document.getElementById('back-bar').style.display = (screenHistory.length > 0) ? 'block' : 'none';
+  window.scrollTo(0, 0);
+  saveProgress();
+}
+
+// ===== 進行状況の保存・復元（リロード対策） =====
+const PROGRESS_KEY = 'geniusFinderProgress_v1';
+const API_KEY_STORAGE = 'geniusFinderApiKey';
+
+// ===== チーム共有用APIキー =====
+// テスト配布用にこのファイルへ直接キーを書き込む場合はここに設定してください。
+// 空のままなら従来通り、開いた人が自分でキーを入力する画面が表示されます。
+// 注意：ここに書いたキーはHTMLファイルの中に平文で残ります。信頼できるチーム内だけで共有し、
+//       公開リポジトリやSNS等、不特定多数の目に触れる場所にはアップロードしないでください。
+const SHARED_API_KEY = '';
+
+function saveProgress() {
+  try {
+    const activeScreen = screens.find(s => document.getElementById(s).classList.contains('active'));
+    const { apiKey, uploadedImage, ...stateToSave } = state;
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ state: stateToSave, screenHistory, activeScreen }));
+  } catch (e) {
+    // 保存できなくても操作は継続させる（容量オーバー等）
+  }
+}
+
+function clearProgress() {
+  try { localStorage.removeItem(PROGRESS_KEY); } catch (e) {}
+}
+
+function autosaveNickname(value) {
+  state.nickname = value;
+  saveProgress();
+}
+
+function autosaveField(key, value) {
+  state.reflectionData[key] = value;
+  saveProgress();
+}
+
+function restoreProgress() {
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(PROGRESS_KEY)); } catch (e) { saved = null; }
+  if (!saved || !saved.state || !state.apiKey) return false;
+
+  Object.assign(state, saved.state);
+  screenHistory = saved.screenHistory || [];
+
+  if (state.nickname) document.getElementById('nickname').value = state.nickname;
+  if (state.selectedArts.length) renderArtGrid();
+
+  if (state.selectedArts.length === 3) {
+    const grid = document.getElementById('focus-grid');
+    grid.innerHTML = state.selectedArts.map(id => {
+      const art = artworks.find(a => a.id === id);
+      const sel = id === state.focusArt ? ' selected' : '';
+      return `<div class="art-item${sel}" id="focus-${id}" onclick="pickFocus(${id})">
+        <img src="${art.src}" alt="${art.title}"><div class="check">✓</div></div>`;
+    }).join('');
+    document.getElementById('btn-focus-next').disabled = !state.focusArt;
+  }
+
+  if (state.focusArt) {
+    const focus = artworks.find(a => a.id === state.focusArt);
+    if (focus) {
+      document.getElementById('focus-art-display').innerHTML = `<img src="${focus.src}" alt="${focus.title}">`;
+      const others = state.selectedArts.filter(id => id !== state.focusArt);
+      document.getElementById('selected-arts-row').innerHTML = others.map(id => {
+        const art = artworks.find(a => a.id === id);
+        return `<div class="art-thumb"><img src="${art.src}" alt="${art.title}"></div>`;
+      }).join('');
+    }
+  }
+
+  if (state.reflectionData) {
+    (state.reflectionData.focus || []).forEach(txt => {
+      document.querySelectorAll('#tags-focus .emotion-tag').forEach(el => { if (el.textContent === txt) el.classList.add('selected'); });
+    });
+    (state.reflectionData.mood || []).forEach(txt => {
+      document.querySelectorAll('#tags-mood .emotion-tag').forEach(el => { if (el.textContent === txt) el.classList.add('selected'); });
+    });
+    ['why', 'action', 'title', 'takeaway', 'selflike'].forEach(key => {
+      const el = document.getElementById('answer-' + key);
+      if (el && state.reflectionData[key]) el.value = state.reflectionData[key];
+    });
+  }
+
+  if (state.themesShown) {
+    renderThemes(state.themesShown);
+    if (state.selectedTheme) {
+      const idx = state.themesShown.findIndex(t => t.title === state.selectedTheme);
+      const el = idx >= 0 ? document.getElementById('theme-' + idx) : null;
+      if (el) selectTheme(idx, state.selectedTheme, el);
+    }
+  }
+
+  if (state.selectedTheme) {
+    document.getElementById('theme-text-display').textContent = state.selectedTheme;
+  }
+
+  if (state.hypothesis) {
+    renderHypothesis(state.hypothesis);
+    if (state.reaction) {
+      const btn = document.querySelector(`.reaction-btn.${state.reaction}`);
+      if (btn) selectReaction(state.reaction, btn);
+    }
+    const noteEl = document.getElementById('reaction-text');
+    if (noteEl && state.reactionNote) noteEl.value = state.reactionNote;
+  }
+
+  let targetScreen = saved.activeScreen && screens.includes(saved.activeScreen) ? saved.activeScreen : 'screen-start';
+  if (targetScreen === 'screen-api') targetScreen = 'screen-start';
+  if (targetScreen === 'screen-card') renderCard();
+  showScreen(targetScreen, { pushHistory: false });
+  return true;
 }
 
 // ===== SCREEN 0: APIキー =====
@@ -851,7 +1029,13 @@ function startWithKey() {
     return;
   }
   state.apiKey = key;
+  try { localStorage.setItem(API_KEY_STORAGE, key); } catch (e) {}
   showScreen('screen-start');
+}
+
+function changeApiKey() {
+  document.getElementById('api-key-input').value = '';
+  showScreen('screen-api');
 }
 
 // ===== SCREEN 1: スタート =====
@@ -876,6 +1060,19 @@ function renderArtGrid() {
       <div class="check">✓</div>
     </div>
   `).join('');
+  // 既に選択済みの状態（戻る／再読み込み復元）を反映
+  state.selectedArts.forEach((id, i) => {
+    const el = document.getElementById('art-' + id);
+    if (!el) return;
+    el.classList.add('selected');
+    const num = document.createElement('div');
+    num.className = 'num';
+    num.textContent = i + 1;
+    num.id = 'num-' + id;
+    el.appendChild(num);
+  });
+  document.getElementById('select-count').textContent = state.selectedArts.length;
+  document.getElementById('btn-art-next').disabled = state.selectedArts.length !== 3;
 }
 
 function toggleArt(id) {
@@ -904,6 +1101,7 @@ function toggleArt(id) {
   }
   document.getElementById('select-count').textContent = state.selectedArts.length;
   document.getElementById('btn-art-next').disabled = state.selectedArts.length !== 3;
+  saveProgress();
 }
 
 function clearSelection() {
@@ -931,16 +1129,19 @@ function closeModal() {
 // ===== SCREEN 2.5: 気になる1枚 =====
 function goToFocus() {
   if (state.selectedArts.length !== 3) return;
-  state.focusArt = null;
+  if (!state.selectedArts.includes(state.focusArt)) {
+    state.focusArt = null;
+  }
   const grid = document.getElementById('focus-grid');
   grid.innerHTML = state.selectedArts.map(id => {
     const art = artworks.find(a => a.id === id);
-    return `<div class="art-item" id="focus-${id}" onclick="pickFocus(${id})">
+    const sel = id === state.focusArt ? ' selected' : '';
+    return `<div class="art-item${sel}" id="focus-${id}" onclick="pickFocus(${id})">
       <img src="${art.src}" alt="${art.title}">
       <div class="check">✓</div>
     </div>`;
   }).join('');
-  document.getElementById('btn-focus-next').disabled = true;
+  document.getElementById('btn-focus-next').disabled = !state.focusArt;
   showScreen('screen-focus');
 }
 
@@ -950,6 +1151,7 @@ function pickFocus(id) {
     document.getElementById('focus-' + sid).classList.toggle('selected', sid === id);
   });
   document.getElementById('btn-focus-next').disabled = false;
+  saveProgress();
 }
 
 // ===== SCREEN 3: 言語化 =====
@@ -970,6 +1172,12 @@ function goToReflection() {
 
 function toggleTag(el) {
   el.classList.toggle('selected');
+  const containerId = el.parentElement.id;
+  const key = containerId === 'tags-focus' ? 'focus' : containerId === 'tags-mood' ? 'mood' : null;
+  if (key) {
+    state.reflectionData[key] = getSelectedTags(containerId);
+    saveProgress();
+  }
 }
 
 function getSelectedTags(containerId) {
@@ -988,17 +1196,18 @@ async function goToTheme() {
     takeaway: document.getElementById('answer-takeaway').value,
   };
   showScreen('screen-theme');
-  await loadThemes();
+  const alreadyLoaded = document.getElementById('theme-cards').children.length > 0;
+  if (!alreadyLoaded) {
+    await loadThemes();
+  }
 }
 
-async function loadThemes() {
-  document.getElementById('loading-theme').style.display = 'block';
-  document.getElementById('theme-cards').style.display = 'none';
-  document.getElementById('btn-theme-next').style.display = 'none';
-  document.getElementById('btn-theme-random').style.display = 'none';
-  state.selectedTheme = '';
-
-  const prompt = `
+function buildThemePrompt() {
+  const categoryLines = THEME_CATEGORIES.map(c => `- ${c.key}: ${c.guide}`).join('\n');
+  const jsonSample = THEME_CATEGORIES
+    .map(c => `    "${c.key}": {"title": "テーマ名（10文字以内）", "hint": "補足説明（20文字以内、ちょっと遊び心のある言い方で）"}`)
+    .join(',\n');
+  return `
 あなたはGENIUS FINDERのAIです。ユーザーのアートへの反応を元に、創作テーマを3つ提案してください。
 口調・世界観：温かく、少しズレていて、面白がる。堅苦しい教育的な言い回しは禁止。本人・作品を笑いの対象にはしない。
 
@@ -1010,45 +1219,84 @@ async function loadThemes() {
 - つけた妙なタイトル: ${state.reflectionData.title || '未回答'}
 - 持ち帰りたい要素: ${state.reflectionData.takeaway || '未回答'}
 
-## 出力形式（JSON）
+## 出力するテーマの3種類（それぞれ1つずつ、必ずすべて埋める）
+${categoryLines}
+
+## 出力形式（JSON。keyは必ず ${THEME_CATEGORIES.map(c => c.key).join(' / ')} のみ）
 {
-  "themes": [
-    {"title": "テーマ名（10文字以内）", "hint": "補足説明（20文字以内、ちょっと遊び心のある言い方で）"},
-    {"title": "テーマ名", "hint": "補足説明"},
-    {"title": "テーマ名", "hint": "補足説明"}
-  ]
+  "themes": {
+${jsonSample}
+  }
 }
 
 テーマは具体的で創作意欲が湧くものにしてください。「描いてみよう」ではなく「〇〇」のような名詞・概念で。
-3つのうち少なくとも1つは、ユーモラスで意外性のあるテーマにしてください（例：「怒っているプリン」「会議を救う宇宙人」のような肩の力が抜けるもの）。
 JSONのみ返してください。`;
+}
+
+function fallbackThemes() {
+  const texts = {
+    normal:   { title: '境界線', hint: 'あなたが感じた「ここまで」と「ここから」' },
+    creative: { title: '停止した瞬間', hint: '動きが止まる前の、あの一秒' },
+    comedy:   { title: '怒っている置物', hint: '普段は黙っているものが、ついにキレた図' },
+  };
+  return THEME_CATEGORIES.map(c => ({ ...texts[c.key], category: c.key }));
+}
+
+async function loadThemes() {
+  document.getElementById('loading-theme').style.display = 'block';
+  document.getElementById('theme-cards').style.display = 'none';
+  document.getElementById('btn-theme-next').style.display = 'none';
+  document.getElementById('btn-theme-random').style.display = 'none';
+  document.getElementById('theme-error').style.display = 'none';
+  state.selectedTheme = '';
+  state.themesShown = null;
 
   try {
-    const res = await callClaude(prompt, false);
+    const res = await callClaude(buildThemePrompt(), false);
     const json = JSON.parse(res.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());
-    renderThemes(json.themes);
+    const themes = THEME_CATEGORIES.map(c => ({ ...json.themes[c.key], category: c.key }));
+    state.themesShown = themes;
+    renderThemes(themes);
   } catch(e) {
-    // フォールバック
-    renderThemes([
-      { title: '境界線', hint: 'あなたが感じた「ここまで」と「ここから」' },
-      { title: '停止した瞬間', hint: '動きが止まる前の、あの一秒' },
-      { title: '怒っている置物', hint: '普段は黙っているものが、ついにキレた図' },
-    ]);
+    console.error(e);
+    const themes = fallbackThemes();
+    state.themesShown = themes;
+    renderThemes(themes);
+    document.getElementById('theme-error').style.display = 'block';
+    document.getElementById('theme-error-text').textContent =
+      describeApiError(e) + ' いまはサンプルのお題を表示しています。';
   }
+  saveProgress();
 }
 
 function renderThemes(themes) {
   document.getElementById('loading-theme').style.display = 'none';
   const container = document.getElementById('theme-cards');
+  const catLabel = key => (THEME_CATEGORIES.find(c => c.key === key) || {}).label || '';
   container.innerHTML = themes.map((t, i) => `
     <div class="theme-card" id="theme-${i}" onclick="selectTheme(${i}, '${t.title.replace(/'/g,"\\'")}', this)">
-      <div class="theme-label">THEME ${String.fromCharCode(65+i)}</div>
+      <div class="theme-label">THEME ${String.fromCharCode(65+i)} ・ ${catLabel(t.category)}</div>
       <div class="theme-text">${t.title}</div>
       <div class="theme-hint">${t.hint}</div>
     </div>
   `).join('');
   container.style.display = 'block';
   document.getElementById('btn-theme-random').style.display = 'block';
+}
+
+// ===== APIエラーの説明文（利用者・スタッフが状況を理解できるように） =====
+function describeApiError(e) {
+  const msg = (e && e.message) || '';
+  if (/invalid[_ ]?x[- ]?api[- ]?key|authentication|401/i.test(msg)) {
+    return 'APIキーが正しくないようです。スタッフに確認してください。';
+  }
+  if (/rate limit|429|overloaded/i.test(msg)) {
+    return '今ちょっと混み合っているみたいです。少し待って、もう一度試してください。';
+  }
+  if (/Failed to fetch|NetworkError|network/i.test(msg)) {
+    return '通信がうまくいかなかったみたいです。電波状況を確認してください。';
+  }
+  return 'AIとの通信でエラーが起きました。';
 }
 
 function selectTheme(idx, title, el) {
@@ -1109,9 +1357,18 @@ function handleUpload(event) {
 async function goToHypothesis() {
   state.reflectionData.selflike = document.getElementById('answer-selflike').value;
   showScreen('screen-hypothesis');
-  document.getElementById('loading-hypothesis').style.display = 'block';
-  document.getElementById('hypothesis-content').style.display = 'none';
+  if (!state.hypothesis) {
+    document.getElementById('loading-hypothesis').style.display = 'block';
+    document.getElementById('hypothesis-content').style.display = 'none';
+    await generateHypothesis();
+  }
+}
 
+async function retryHypothesis() {
+  document.getElementById('hypothesis-error').style.display = 'none';
+  document.getElementById('hypothesis-content').style.display = 'none';
+  document.getElementById('loading-hypothesis').style.display = 'block';
+  state.hypothesis = null;
   await generateHypothesis();
 }
 
@@ -1185,6 +1442,7 @@ JSONのみ返してください。`;
     const res = await callClaude(userPrompt, true, systemPrompt, content);
     const json = JSON.parse(res.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());
     state.hypothesis = json;
+    document.getElementById('hypothesis-error').style.display = 'none';
     renderHypothesis(json);
   } catch(e) {
     console.error(e);
@@ -1202,7 +1460,11 @@ JSONのみ返してください。`;
       evidence: ['余白・空間に目が行った選択から', `「${state.selectedTheme}」というテーマへの反応から`, '持ち帰りたい要素の回答から']
     };
     renderHypothesis(state.hypothesis);
+    document.getElementById('hypothesis-error').style.display = 'block';
+    document.getElementById('hypothesis-error-text').textContent =
+      describeApiError(e) + ' いまはサンプルの仮説を表示しています。';
   }
+  saveProgress();
 }
 
 function renderHypothesis(h) {
@@ -1274,6 +1536,11 @@ function selectReaction(type, el) {
 // ===== SCREEN 7: 発見カード =====
 function goToCard() {
   state.reactionNote = document.getElementById('reaction-text').value;
+  renderCard();
+  showScreen('screen-card');
+}
+
+function renderCard() {
   const h = state.hypothesis;
   if (!h) return;
 
@@ -1293,8 +1560,6 @@ function goToCard() {
 
   const now = new Date();
   document.getElementById('card-date').textContent = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} — ${state.nickname}`;
-
-  showScreen('screen-card');
 }
 
 // ===== Claude API呼び出し =====
@@ -1332,14 +1597,17 @@ async function callClaude(prompt, useSystem = false, systemPrompt = '', content 
 
 // ===== リセット =====
 function resetAll() {
+  state.nickname = '';
   state.selectedArts = [];
   state.focusArt = null;
   state.reflectionData = {};
   state.selectedTheme = '';
+  state.themesShown = null;
   state.uploadedImage = null;
   state.hypothesis = null;
   state.reaction = '';
   state.reactionNote = '';
+  document.getElementById('nickname').value = '';
   document.getElementById('preview-img').style.display = 'none';
   document.getElementById('preview-img').src = '';
   document.getElementById('upload-input').value = '';
@@ -1350,10 +1618,38 @@ function resetAll() {
   document.getElementById('answer-selflike').value = '';
   document.getElementById('reaction-text').value = '';
   document.getElementById('reaction-note').style.display = 'none';
+  document.getElementById('theme-error').style.display = 'none';
+  document.getElementById('hypothesis-error').style.display = 'none';
   document.querySelectorAll('.emotion-tag.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.art-item.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.art-item .num').forEach(el => el.remove());
+  document.getElementById('select-count').textContent = '0';
+  document.getElementById('btn-art-next').disabled = true;
   resetTimer();
-  showScreen('screen-start');
+  screenHistory = [];
+  clearProgress();
+  showScreen('screen-start', { pushHistory: false });
 }
+
+// ===== 起動時の初期化：APIキー・進行状況の復元 =====
+(function initApp() {
+  try {
+    const savedKey = localStorage.getItem(API_KEY_STORAGE);
+    if (savedKey) {
+      state.apiKey = savedKey;
+    } else if (SHARED_API_KEY) {
+      state.apiKey = SHARED_API_KEY;
+      localStorage.setItem(API_KEY_STORAGE, SHARED_API_KEY);
+    }
+  } catch (e) {
+    if (!state.apiKey && SHARED_API_KEY) state.apiKey = SHARED_API_KEY;
+  }
+
+  const restored = restoreProgress();
+  if (!restored && state.apiKey) {
+    showScreen('screen-start', { pushHistory: false });
+  }
+})();
 </script>
 </body>
 </html>
