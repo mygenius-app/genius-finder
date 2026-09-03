@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>MY genius JOURNEY</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Space+Grotesk:wght@500;600&display=swap">
 <style>
   :root {
@@ -870,7 +871,8 @@
     </div>
   </div>
 
-  <p class="share-note">スクショで保存・自慢してOKです</p>
+  <p class="share-note">画像として保存、スクショで保存、どちらもOKです</p>
+  <button class="btn btn-secondary" id="save-card-btn" onclick="saveCardAsImage()">🖼 画像として保存</button>
   <a class="btn btn-primary" href="https://docs.google.com/forms/d/e/1FAIpQLSdjVm9UnQzaTYt0hapGQfdI2EJcAtoI8DUo0FLX8jDCSZq_Gg/viewform" target="_blank" rel="noopener" style="text-decoration:none;box-sizing:border-box">感想をアンケートで教えてください</a>
   <button class="btn btn-secondary" onclick="resetAll()">もう一回、遊んでみる</button>
 </div>
@@ -1818,6 +1820,41 @@ function renderCard() {
 
   const now = new Date();
   document.getElementById('card-date').textContent = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} — ${state.nickname}`;
+}
+
+// カード画面を1枚の画像として書き出す（html2canvas使用、CDN読み込み）
+async function saveCardAsImage() {
+  const btn = document.getElementById('save-card-btn');
+  const original = btn.textContent;
+  if (typeof html2canvas === 'undefined') {
+    alert('画像作成の準備ができていません。通信状況を確認してもう一度お試しください。');
+    return;
+  }
+  btn.textContent = '作成中...';
+  btn.disabled = true;
+  try {
+    const cardEl = document.getElementById('genius-card');
+    const canvas = await html2canvas(cardEl, {
+      backgroundColor: null,
+      scale: 2,
+      useCORS: true,
+      // 環境によってはwindow.innerWidth/Heightが信頼できないため、
+      // レイアウト実測値（documentElement.clientWidth/Height）を明示的に渡す
+      windowWidth: document.documentElement.clientWidth,
+      windowHeight: document.documentElement.clientHeight
+    });
+    const link = document.createElement('a');
+    const safeName = (state.nickname || 'MY_GENIUS_CARD').replace(/[^\w\p{L}\p{N}]/gu, '_');
+    link.download = `MY_GENIUS_CARD_${safeName}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    console.error('saveCardAsImage failed', e);
+    alert('画像の保存に失敗しました。お手数ですがスクリーンショットをお試しください。');
+  } finally {
+    btn.textContent = original;
+    btn.disabled = false;
+  }
 }
 
 // ===== Claude API呼び出し =====
