@@ -96,7 +96,7 @@
   .btn + .btn { margin-top: 10px; }
 
   /* ── フォーム ── */
-  input[type="text"], input[type="password"], textarea {
+  input[type="text"], input[type="password"], textarea, select {
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -108,7 +108,7 @@
     outline: none;
     transition: border-color 0.15s;
   }
-  input:focus, textarea:focus { border-color: var(--accent); }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
   textarea { resize: vertical; min-height: 80px; }
   label { display: block; font-size: 13px; color: var(--sub); margin-bottom: 6px; }
   .field { margin-bottom: 20px; }
@@ -603,6 +603,22 @@
     <label>呼び名（なんでもOK）</label>
     <input type="text" id="nickname" placeholder="例：たろう、みどり、謎の人..." oninput="autosaveNickname(this.value)">
   </div>
+  <div class="field">
+    <label>年齢帯（任意）</label>
+    <select id="age-range">
+      <option value="">回答しない</option>
+      <option value="10代">10代</option>
+      <option value="20代">20代</option>
+      <option value="30代">30代</option>
+      <option value="40代">40代</option>
+      <option value="50代">50代</option>
+      <option value="60代以上">60代以上</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>お住まいの国（任意）</label>
+    <input type="text" id="country" placeholder="例：日本">
+  </div>
   <div class="consent-item">
     <input type="checkbox" id="consent1">
     <label for="consent1">アートへの反応や回答をもとに、MY genius JOURNEYが仮説をつくることに同意します</label>
@@ -1091,7 +1107,9 @@ function goToArtSelect() {
   dbUpdate('users', state.userId, {
     nickname,
     consent_hypothesis: true,
-    consent_disclaimer: true
+    consent_disclaimer: true,
+    age_range: document.getElementById('age-range').value || null,
+    country: document.getElementById('country').value.trim() || null
   });
   dbInsert('sessions', {
     id: state.sessionId,
@@ -1802,6 +1820,8 @@ function resetAll() {
   state.reaction = '';
   state.reactionNote = '';
   document.getElementById('nickname').value = '';
+  document.getElementById('age-range').value = '';
+  document.getElementById('country').value = '';
   document.getElementById('preview-img').style.display = 'none';
   document.getElementById('preview-img').src = '';
   document.getElementById('upload-input').value = '';
