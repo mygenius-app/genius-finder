@@ -578,22 +578,8 @@
   <button class="back-btn" onclick="goBack()">← ひとつ戻る</button>
 </div>
 
-<!-- ===== SCREEN 0: APIキー設定 ===== -->
-<div class="screen active" id="screen-api">
-  <br>
-  <p class="tagline">🔑 SETUP</p>
-  <h1>まずは、カギをどうぞ</h1>
-  <p class="sub-text">Anthropic APIキーを入れると、扉が開きます。<br>このページの中だけで使う、ここだけの秘密です。</p>
-  <div class="field">
-    <label>Anthropic API Key</label>
-    <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off">
-    <div class="api-note">※ どこにも送信しません。約束します。</div>
-  </div>
-  <button class="btn btn-primary" onclick="startWithKey()">とびらを開ける</button>
-</div>
-
 <!-- ===== SCREEN 1: スタート ===== -->
-<div class="screen" id="screen-start">
+<div class="screen active" id="screen-start">
   <div class="start-visual">
     <div class="start-visual-text">GENIUS FINDER v0.1</div>
   </div>
@@ -615,7 +601,6 @@
   </div>
   <br>
   <button class="btn btn-primary" onclick="goToArtSelect()">冒険をはじめる</button>
-  <button class="btn btn-ghost" onclick="changeApiKey()">🔑 APIキーを変更</button>
 </div>
 
 <!-- ===== SCREEN 2: アート選択 ===== -->
@@ -660,11 +645,14 @@
       <div class="emotion-tag" onclick="toggleTag(this)">余白・空間</div>
       <div class="emotion-tag" onclick="toggleTag(this)">動き・流れ</div>
       <div class="emotion-tag" onclick="toggleTag(this)">細部・テクスチャ</div>
+      <div class="emotion-tag" onclick="toggleTag(this)">構図・バランス</div>
+      <div class="emotion-tag" onclick="toggleTag(this)">世界観・物語</div>
+      <div class="emotion-tag" onclick="toggleTag(this)">なんかわからない</div>
     </div>
   </div>
 
   <div class="question-block">
-    <div class="question-label">Q2. どんな気分になった？（複数選択OK）</div>
+    <div class="question-label">Q2. どんな気分になった？（複数選択OK）<br><small style="color:var(--sub);font-weight:400">矛盾していても大丈夫です。むしろそのまま選んでください。</small></div>
     <div class="emotion-tags" id="tags-mood">
       <div class="emotion-tag" onclick="toggleTag(this)">落ち着く</div>
       <div class="emotion-tag" onclick="toggleTag(this)">ざわざわする</div>
@@ -678,7 +666,7 @@
   </div>
 
   <div class="question-block">
-    <div class="question-label">Q3. なぜ惹かれたと思う？<br><small style="color:var(--sub);font-weight:400">正解は作者も知りません。</small></div>
+    <div class="question-label">Q3. この作品のどこに惹かれたと思う？<br><small style="color:var(--sub);font-weight:400">わからなければ「わからない」でも大丈夫です。</small></div>
     <textarea id="answer-why" placeholder="直感でどうぞ。一言でも。" oninput="autosaveField('why', this.value)"></textarea>
   </div>
 
@@ -693,8 +681,8 @@
   </div>
 
   <div class="question-block">
-    <div class="question-label">Q6. 今の生活に持ち帰りたい要素は？</div>
-    <textarea id="answer-takeaway" placeholder="例：この色、この静けさ、この混沌..." oninput="autosaveField('takeaway', this.value)"></textarea>
+    <div class="question-label">Q6. この作品の世界に、何か一つだけ足すとしたら何を足す？<br><small style="color:var(--sub);font-weight:400">わからなければ「わからない」でも大丈夫です。</small></div>
+    <textarea id="answer-addToWorld" placeholder="例：もう一人誰かがいる、扉が一つある、音がある..." oninput="autosaveField('addToWorld', this.value)"></textarea>
   </div>
 
   <button class="btn btn-primary" onclick="goToTheme()">テーマを受け取りに行く</button>
@@ -838,13 +826,13 @@
 <script>
 // ===== 状態管理 =====
 const state = {
-  apiKey: '',
   nickname: '',
   selectedArts: [],
   focusArt: null,
   reflectionData: {},
   selectedTheme: '',
   themesShown: null,
+  themeHistory: [],
   uploadedImage: null,
   hypothesis: null,
   reaction: '',
@@ -876,9 +864,9 @@ const artworks = [
 ];
 
 // ===== 画面遷移ユーティリティ =====
-const screens = ['screen-api','screen-start','screen-art','screen-focus','screen-reflection','screen-theme','screen-create','screen-hypothesis','screen-card'];
-const stepLabels = ['','','ビビッとくる3つ','気になる1枚','感じたこと語る','お題を受け取る','描いてみる','仮説をチェック','発見カード'];
-const progressMap = [0, 5, 15, 25, 45, 60, 70, 85, 100];
+const screens = ['screen-start','screen-art','screen-focus','screen-reflection','screen-theme','screen-create','screen-hypothesis','screen-card'];
+const stepLabels = ['','ビビッとくる3つ','気になる1枚','感じたこと語る','お題を受け取る','描いてみる','仮説をチェック','発見カード'];
+const progressMap = [0, 15, 25, 45, 60, 70, 85, 100];
 
 function showScreen(id, opts = {}) {
   const { pushHistory = true } = opts;
@@ -911,19 +899,11 @@ function goBack() {
 
 // ===== 進行状況の保存・復元（リロード対策） =====
 const PROGRESS_KEY = 'geniusFinderProgress_v1';
-const API_KEY_STORAGE = 'geniusFinderApiKey';
-
-// ===== チーム共有用APIキー =====
-// テスト配布用にこのファイルへ直接キーを書き込む場合はここに設定してください。
-// 空のままなら従来通り、開いた人が自分でキーを入力する画面が表示されます。
-// 注意：ここに書いたキーはHTMLファイルの中に平文で残ります。信頼できるチーム内だけで共有し、
-//       公開リポジトリやSNS等、不特定多数の目に触れる場所にはアップロードしないでください。
-const SHARED_API_KEY = '';
 
 function saveProgress() {
   try {
     const activeScreen = screens.find(s => document.getElementById(s).classList.contains('active'));
-    const { apiKey, uploadedImage, ...stateToSave } = state;
+    const { uploadedImage, ...stateToSave } = state;
     localStorage.setItem(PROGRESS_KEY, JSON.stringify({ state: stateToSave, screenHistory, activeScreen }));
   } catch (e) {
     // 保存できなくても操作は継続させる（容量オーバー等）
@@ -947,7 +927,7 @@ function autosaveField(key, value) {
 function restoreProgress() {
   let saved;
   try { saved = JSON.parse(localStorage.getItem(PROGRESS_KEY)); } catch (e) { saved = null; }
-  if (!saved || !saved.state || !state.apiKey) return false;
+  if (!saved || !saved.state) return false;
 
   Object.assign(state, saved.state);
   screenHistory = saved.screenHistory || [];
@@ -985,7 +965,7 @@ function restoreProgress() {
     (state.reflectionData.mood || []).forEach(txt => {
       document.querySelectorAll('#tags-mood .emotion-tag').forEach(el => { if (el.textContent === txt) el.classList.add('selected'); });
     });
-    ['why', 'action', 'title', 'takeaway', 'selflike'].forEach(key => {
+    ['why', 'action', 'title', 'addToWorld', 'selflike'].forEach(key => {
       const el = document.getElementById('answer-' + key);
       if (el && state.reflectionData[key]) el.value = state.reflectionData[key];
     });
@@ -1015,27 +995,9 @@ function restoreProgress() {
   }
 
   let targetScreen = saved.activeScreen && screens.includes(saved.activeScreen) ? saved.activeScreen : 'screen-start';
-  if (targetScreen === 'screen-api') targetScreen = 'screen-start';
   if (targetScreen === 'screen-card') renderCard();
   showScreen(targetScreen, { pushHistory: false });
   return true;
-}
-
-// ===== SCREEN 0: APIキー =====
-function startWithKey() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key.startsWith('sk-')) {
-    alert('あれ、キーの形が違うかも？（sk- から始まるやつです）');
-    return;
-  }
-  state.apiKey = key;
-  try { localStorage.setItem(API_KEY_STORAGE, key); } catch (e) {}
-  showScreen('screen-start');
-}
-
-function changeApiKey() {
-  document.getElementById('api-key-input').value = '';
-  showScreen('screen-api');
 }
 
 // ===== SCREEN 1: スタート =====
@@ -1193,7 +1155,7 @@ async function goToTheme() {
     why: document.getElementById('answer-why').value,
     action: document.getElementById('answer-action').value,
     title: document.getElementById('answer-title').value,
-    takeaway: document.getElementById('answer-takeaway').value,
+    addToWorld: document.getElementById('answer-addToWorld').value,
   };
   showScreen('screen-theme');
   const alreadyLoaded = document.getElementById('theme-cards').children.length > 0;
@@ -1207,6 +1169,9 @@ function buildThemePrompt() {
   const jsonSample = THEME_CATEGORIES
     .map(c => `    "${c.key}": {"title": "テーマ名（10文字以内）", "hint": "補足説明（20文字以内、ちょっと遊び心のある言い方で）"}`)
     .join(',\n');
+  const avoidBlock = state.themeHistory.length > 0
+    ? `\n## 過去に提示済みのテーマ（重複禁止）\n${state.themeHistory.map(t => `- ${t}`).join('\n')}\nこれらと同じ、または似た切り口のテーマは避け、まったく違う角度のテーマにしてください。\n`
+    : '';
   return `
 あなたはGENIUS FINDERのAIです。ユーザーのアートへの反応を元に、創作テーマを3つ提案してください。
 口調・世界観：温かく、少しズレていて、面白がる。堅苦しい教育的な言い回しは禁止。本人・作品を笑いの対象にはしない。
@@ -1217,8 +1182,8 @@ function buildThemePrompt() {
 - なぜ惹かれたか: ${state.reflectionData.why || '未回答'}
 - 作品の中で何をするか: ${state.reflectionData.action || '未回答'}
 - つけた妙なタイトル: ${state.reflectionData.title || '未回答'}
-- 持ち帰りたい要素: ${state.reflectionData.takeaway || '未回答'}
-
+- 世界に何を足すか: ${state.reflectionData.addToWorld || '未回答'}
+${avoidBlock}
 ## 出力するテーマの3種類（それぞれ1つずつ、必ずすべて埋める）
 ${categoryLines}
 
@@ -1256,6 +1221,7 @@ async function loadThemes() {
     const json = JSON.parse(res.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());
     const themes = THEME_CATEGORIES.map(c => ({ ...json.themes[c.key], category: c.key }));
     state.themesShown = themes;
+    state.themeHistory.push(...themes.map(t => t.title));
     renderThemes(themes);
   } catch(e) {
     console.error(e);
@@ -1287,16 +1253,22 @@ function renderThemes(themes) {
 // ===== APIエラーの説明文（利用者・スタッフが状況を理解できるように） =====
 function describeApiError(e) {
   const msg = (e && e.message) || '';
+  if (e instanceof SyntaxError) {
+    return 'AIの返答をうまく読み取れませんでした（形式が想定と違ったようです）。もう一度試してください。';
+  }
   if (/invalid[_ ]?x[- ]?api[- ]?key|authentication|401/i.test(msg)) {
     return 'APIキーが正しくないようです。スタッフに確認してください。';
   }
   if (/rate limit|429|overloaded/i.test(msg)) {
     return '今ちょっと混み合っているみたいです。少し待って、もう一度試してください。';
   }
+  if (/payload|too large|413|request.*large/i.test(msg)) {
+    return '送るデータ（画像など）が大きすぎたようです。写真のサイズが大きい場合、うまく送れないことがあります。';
+  }
   if (/Failed to fetch|NetworkError|network/i.test(msg)) {
     return '通信がうまくいかなかったみたいです。電波状況を確認してください。';
   }
-  return 'AIとの通信でエラーが起きました。';
+  return `AIとの通信でエラーが起きました（${msg || '詳細不明'}）。`;
 }
 
 function selectTheme(idx, title, el) {
@@ -1345,12 +1317,32 @@ function handleUpload(event) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    state.uploadedImage = e.target.result; // base64
-    const preview = document.getElementById('preview-img');
-    preview.src = e.target.result;
-    preview.style.display = 'block';
+    resizeImage(e.target.result, 1280, (resized) => {
+      state.uploadedImage = resized; // base64（縮小済み）
+      const preview = document.getElementById('preview-img');
+      preview.src = resized;
+      preview.style.display = 'block';
+    });
   };
   reader.readAsDataURL(file);
+}
+
+// スマホのカメラ写真は数MBになることがあり、AIへ送るデータが大きくなりすぎると
+// 通信エラーの原因になるため、長辺を基準に縮小してから使う
+function resizeImage(dataUrl, maxSize, callback) {
+  const img = new Image();
+  img.onload = () => {
+    const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+    if (scale >= 1) { callback(dataUrl); return; }
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    callback(canvas.toDataURL('image/jpeg', 0.85));
+  };
+  img.onerror = () => callback(dataUrl); // 失敗時は元画像のまま
+  img.src = dataUrl;
 }
 
 // ===== SCREEN 6: 仮説 =====
@@ -1373,8 +1365,9 @@ async function retryHypothesis() {
 }
 
 async function generateHypothesis() {
-  const focusTitle = artworks.find(a => a.id === state.focusArt)?.title || '';
-  const otherTitles = state.selectedArts.filter(id => id !== state.focusArt).map(id => artworks.find(a => a.id === id).title);
+  const focusArtwork = artworks.find(a => a.id === state.focusArt);
+  const focusTitle = focusArtwork?.title || '';
+  const otherArtworks = state.selectedArts.filter(id => id !== state.focusArt).map(id => artworks.find(a => a.id === id)).filter(Boolean);
 
   const systemPrompt = `あなたはGENIUS FINDERのAIコーチです。親しみやすく、少しズレていて、押しつけがましくない先生のような存在。
 ユーザーのアートへの反応・言語化・創作から、その人固有のWants・Being・Geniusを仮説として提示します。
@@ -1393,14 +1386,18 @@ async function generateHypothesis() {
 - 根拠を必ず示す（どの回答・選択から読み取ったか）
 - 「あなたは〇〇型です」と固定ラベルを貼らない
 - 弱みを強みに無理やり変換しない
-- 診断・病名・性格タイプ・発達特性・知能・政治宗教等のセンシティブ属性には一切言及しない`;
+- 診断・病名・性格タイプ・発達特性・知能・政治宗教等のセンシティブ属性には一切言及しない
+- 「世界に何を足すか」といった回答は、字面をそのまま繰り返さない。その奥にある欲求として一段深く読み解く（例：「もう一人誰かがいる」という答えから、単に「人が好き」ではなく「一人では完結させたくない気持ちがあるのでは」のように、一歩踏み込んだ仮説にする）
+- 特定の設問で直接聞いていなくても、複数の自由記述回答（なぜ惹かれたか／作品の中で何をするか／妙なタイトル／世界に何を足すか）を横断的に見て、「壊す・変える・逸脱する・型を破る」といった破壊的な傾向が一貫して現れていないか確認する。1つの回答だけでなく、複数の回答にまたがって同じ傾向が見える場合のみ、根拠として仮説に含めてよい（単発の場合は無理にこじつけない）
+- 画像には直前にラベル（【最終的に一番気になった作品】【最初に選んだが絞り込まなかった作品】【本人が実際に描いた作品】等）が付く。最終的に一番気になった作品に実際に写っているものと、本人がつけた「妙なタイトル」との関係（一致・ズレ・飛躍）を必ず見る。タイトルを単なる発言として扱わず、作品の中の何を見てそのタイトルに至ったのか、あるいは作品と無関係な言葉を選んだこと自体に何が表れているかを読み解く
+- 「最初に選んだが絞り込まなかった作品」の画像がある場合、3作品（一番気になった作品＋絞り込まなかった2作品）を見比べる。3作品に共通する要素（色・構図・世界観・テーマ等）と、その中でなぜこの1作品に絞られたのかを、画像の違いから推測してよい。本人が理由を言葉にしていなくても、選ばれなかった2作品との対比から見える傾向を仮説の根拠に加えてよい（ただし断定はしない）`;
 
   const userPrompt = `
 以下のユーザーデータから、GENIUS仮説を生成してください。
 
 ## 選んだ作品
-- 一番気になった作品（以下の反応はすべてこの作品について）: ${focusTitle}
-- 他に気になった作品（参考情報）: ${otherTitles.join('、') || 'なし'}
+- 一番気になった作品（以下の反応はすべてこの作品について。画像は【最終的に一番気になった作品】のラベルで渡されます）: ${focusTitle}
+- 最初に3つ選んだうち、絞り込まなかった作品: ${otherArtworks.length}点（画像は【最初に選んだが絞り込まなかった作品】のラベルで渡されます。この2点との対比も判断材料にしてください）
 
 ## アートへの反応
 - 目が行ったもの: ${state.reflectionData.focus?.join('、') || '未回答'}
@@ -1408,7 +1405,7 @@ async function generateHypothesis() {
 - なぜ惹かれたか: ${state.reflectionData.why || '未回答'}
 - 作品の中でする行動: ${state.reflectionData.action || '未回答'}
 - つけた妙なタイトル: ${state.reflectionData.title || '未回答'}
-- 持ち帰りたい要素: ${state.reflectionData.takeaway || '未回答'}
+- 世界に何を足すか: ${state.reflectionData.addToWorld || '未回答'}
 
 ## 創作
 - テーマ: ${state.selectedTheme}
@@ -1432,12 +1429,21 @@ JSONのみ返してください。`;
 
   try {
     let content;
+    const imageParts = [];
+    const addLabeledImage = (label, src) => {
+      imageParts.push({ type: 'text', text: `【${label}】` });
+      imageParts.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: src.split(',')[1] } });
+    };
+    if (focusArtwork) {
+      addLabeledImage('最終的に一番気になった作品', focusArtwork.src);
+    }
+    otherArtworks.forEach(art => addLabeledImage('最初に選んだが絞り込まなかった作品', art.src));
     if (state.uploadedImage) {
+      addLabeledImage('本人が実際に描いた作品', state.uploadedImage);
+    }
+    if (imageParts.length > 0) {
       // 画像あり：vision対応
-      content = [
-        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: state.uploadedImage.split(',')[1] } },
-        { type: 'text', text: userPrompt }
-      ];
+      content = [...imageParts, { type: 'text', text: userPrompt }];
     } else {
       content = userPrompt;
     }
@@ -1566,6 +1572,10 @@ function renderCard() {
 }
 
 // ===== Claude API呼び出し =====
+// サーバー側（Supabase Edge Function）がAnthropic APIキーを保持し、中継する。
+// クライアントはキーを一切持たない。
+const GENIUS_PROXY_URL = 'https://isopjepdxjoigjvoztde.supabase.co/functions/v1/genius-proxy';
+
 async function callClaude(prompt, useSystem = false, systemPrompt = '', content = null) {
   const body = {
     model: 'claude-sonnet-4-5',
@@ -1579,13 +1589,10 @@ async function callClaude(prompt, useSystem = false, systemPrompt = '', content 
     body.system = systemPrompt;
   }
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(GENIUS_PROXY_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': state.apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(body)
   });
@@ -1606,6 +1613,7 @@ function resetAll() {
   state.reflectionData = {};
   state.selectedTheme = '';
   state.themesShown = null;
+  state.themeHistory = [];
   state.uploadedImage = null;
   state.hypothesis = null;
   state.reaction = '';
@@ -1617,7 +1625,7 @@ function resetAll() {
   document.getElementById('answer-why').value = '';
   document.getElementById('answer-action').value = '';
   document.getElementById('answer-title').value = '';
-  document.getElementById('answer-takeaway').value = '';
+  document.getElementById('answer-addToWorld').value = '';
   document.getElementById('answer-selflike').value = '';
   document.getElementById('reaction-text').value = '';
   document.getElementById('reaction-note').style.display = 'none';
@@ -1634,23 +1642,12 @@ function resetAll() {
   showScreen('screen-start', { pushHistory: false });
 }
 
-// ===== 起動時の初期化：APIキー・進行状況の復元 =====
+// ===== 起動時の初期化：進行状況の復元 =====
 (function initApp() {
-  try {
-    const savedKey = localStorage.getItem(API_KEY_STORAGE);
-    if (savedKey) {
-      state.apiKey = savedKey;
-    } else if (SHARED_API_KEY) {
-      state.apiKey = SHARED_API_KEY;
-      localStorage.setItem(API_KEY_STORAGE, SHARED_API_KEY);
-    }
-  } catch (e) {
-    if (!state.apiKey && SHARED_API_KEY) state.apiKey = SHARED_API_KEY;
-  }
-
-  const restored = restoreProgress();
-  if (!restored && state.apiKey) {
-    showScreen('screen-start', { pushHistory: false });
+  if (new URLSearchParams(location.search).has('reset')) {
+    clearProgress();
+  } else {
+    restoreProgress();
   }
 })();
 </script>
