@@ -1834,15 +1834,18 @@ async function saveCardAsImage() {
   btn.disabled = true;
   try {
     const cardEl = document.getElementById('genius-card');
-    const canvas = await html2canvas(cardEl, {
+    // foreignObjectRendering: ページの外部フォント(Google Fonts)を逐一取得・埋め込みしようとして
+    // 通信状況によっては固まる問題があったため、ブラウザの描画をそのまま使う軽量な方式に切り替える
+    const html2canvasPromise = html2canvas(cardEl, {
       backgroundColor: null,
       scale: 2,
       useCORS: true,
-      // 環境によってはwindow.innerWidth/Heightが信頼できないため、
-      // レイアウト実測値（documentElement.clientWidth/Height）を明示的に渡す
+      foreignObjectRendering: true,
       windowWidth: document.documentElement.clientWidth,
       windowHeight: document.documentElement.clientHeight
     });
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 12000));
+    const canvas = await Promise.race([html2canvasPromise, timeoutPromise]);
     const link = document.createElement('a');
     const safeName = (state.nickname || 'MY_GENIUS_CARD').replace(/[^\w\p{L}\p{N}]/gu, '_');
     link.download = `MY_GENIUS_CARD_${safeName}.png`;
@@ -1850,7 +1853,11 @@ async function saveCardAsImage() {
     link.click();
   } catch (e) {
     console.error('saveCardAsImage failed', e);
-    alert('画像の保存に失敗しました。お手数ですがスクリーンショットをお試しください。');
+    if (e.message === 'timeout') {
+      alert('画像の作成に時間がかかりすぎたため中止しました。お手数ですがスクリーンショットをお試しください。');
+    } else {
+      alert('画像の保存に失敗しました。お手数ですがスクリーンショットをお試しください。');
+    }
   } finally {
     btn.textContent = original;
     btn.disabled = false;
