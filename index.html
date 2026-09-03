@@ -839,14 +839,19 @@
 <script>
 // ===== 状態管理 =====
 const state = {
+  userId: null,
+  sessionId: null,
   nickname: '',
   selectedArts: [],
   focusArt: null,
   reflectionData: {},
+  reflectionsId: null,
+  aiInsightsId: null,
   selectedTheme: '',
   themesShown: null,
   themeHistory: [],
   uploadedImage: null,
+  drawingUrl: null,
   hypothesis: null,
   reaction: '',
   reactionNote: ''
@@ -855,6 +860,66 @@ const state = {
 let timerInterval = null;
 let timerSeconds = 300;
 let screenHistory = [];
+
+// ===== データ蓄積（Supabase） =====
+// anonキーはSupabaseの仕様上、公開して問題ない値（RLSで書き込みのみ許可、読み取りは開発側のダッシュボードのみ）
+const SUPABASE_URL = 'https://isopjepdxjoigjvoztde.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlzb3BqZXBkeGpvaWdqdm96dGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzODMxNDAsImV4cCI6MjEwMzk1OTE0MH0.J9sNLTLPhOvwkYE8dl5CsZLc7jLcCenld1M52c44lok';
+const APP_VERSION = '0.2.0';
+const PROMPT_VERSION = '2026-09-03';
+const MODEL_VERSION = 'claude-sonnet-4-5';
+const USER_ID_STORAGE = 'geniusFinderUserId';
+
+// テーブルへの書き込み。ネットワーク不調等で失敗しても体験は止めない（記録できなかっただけにする）。
+async function dbInsert(table, row) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(row)
+    });
+  } catch (e) {
+    console.error('dbInsert failed', table, e);
+  }
+}
+
+// UPDATEは匿名anonキーでは行えない（SELECT権限がないと対象行が特定できずRLSで0件になる）ため、
+// サーバー側の管理者権限で代行する専用Edge Function経由にする。
+const GENIUS_DATA_UPDATE_URL = 'https://isopjepdxjoigjvoztde.supabase.co/functions/v1/genius-data-update';
+
+async function dbUpdate(table, id, fields) {
+  try {
+    await fetch(GENIUS_DATA_UPDATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table, id, fields })
+    });
+  } catch (e) {
+    console.error('dbUpdate failed', table, e);
+  }
+}
+
+// 端末ごとの匿名ID。初回のみ発行してlocalStorageに保存し、以後同じ端末では使い回す。
+// 新規発行した場合はusersテーブルへ1回だけ記録する。
+function ensureUserId() {
+  let id = null;
+  try { id = localStorage.getItem(USER_ID_STORAGE); } catch (e) {}
+  const isNew = !id;
+  if (isNew) {
+    id = crypto.randomUUID();
+    try { localStorage.setItem(USER_ID_STORAGE, id); } catch (e) {}
+  }
+  state.userId = id;
+  if (isNew) {
+    dbInsert('users', { id });
+  }
+  return id;
+}
 
 // ===== テーマの3タイプ（ここを編集すれば増減・言い回し変更が全画面に反映される） =====
 const THEME_CATEGORIES = [
@@ -1022,6 +1087,19 @@ function goToArtSelect() {
     return;
   }
   state.nickname = nickname;
+  state.sessionId = crypto.randomUUID();
+  dbUpdate('users', state.userId, {
+    nickname,
+    consent_hypothesis: true,
+    consent_disclaimer: true
+  });
+  dbInsert('sessions', {
+    id: state.sessionId,
+    user_id: state.userId,
+    app_version: APP_VERSION,
+    prompt_version: PROMPT_VERSION,
+    model_version: MODEL_VERSION
+  });
   renderArtGrid();
   showScreen('screen-art');
 }
@@ -1142,6 +1220,16 @@ function goToReflection() {
     return `<div class="art-thumb"><img src="${art.src}" alt="${art.title}"></div>`;
   }).join('');
 
+  state.selectedArts.forEach((id, i) => {
+    dbInsert('artwork_selections', {
+      session_id: state.sessionId,
+      artwork_id: id,
+      artwork_title: artworks.find(a => a.id === id)?.title || '',
+      is_focus: id === state.focusArt,
+      pick_order: i + 1
+    });
+  });
+
   showScreen('screen-reflection');
 }
 
@@ -1170,8 +1258,21 @@ async function goToTheme() {
     title: document.getElementById('answer-title').value,
     addToWorld: document.getElementById('answer-addToWorld').value,
   };
-  showScreen('screen-theme');
   const alreadyLoaded = document.getElementById('theme-cards').children.length > 0;
+  if (!alreadyLoaded) {
+    state.reflectionsId = crypto.randomUUID();
+    dbInsert('reflections', {
+      id: state.reflectionsId,
+      session_id: state.sessionId,
+      focus_tags: state.reflectionData.focus,
+      mood_tags: state.reflectionData.mood,
+      why: state.reflectionData.why,
+      action: state.reflectionData.action,
+      title: state.reflectionData.title,
+      add_to_world: state.reflectionData.addToWorld
+    });
+  }
+  showScreen('screen-theme');
   if (!alreadyLoaded) {
     await loadThemes();
   }
@@ -1338,9 +1439,34 @@ function handleUpload(event) {
       const preview = document.getElementById('preview-img');
       preview.src = resized;
       preview.style.display = 'block';
+      uploadDrawing(resized);
     });
   };
   reader.readAsDataURL(file);
+}
+
+// 創作画像をSupabase Storageへアップロードし、あとでai_insightsに紐づける。
+// 失敗しても体験は止めない（drawing_urlが空のまま記録される）。
+async function uploadDrawing(dataUrl) {
+  try {
+    const blob = await (await fetch(dataUrl)).blob();
+    const path = `${state.sessionId}.jpg`;
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/drawings/${path}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'image/jpeg',
+        'x-upsert': 'true'
+      },
+      body: blob
+    });
+    if (res.ok) {
+      state.drawingUrl = path;
+    }
+  } catch (e) {
+    console.error('uploadDrawing failed', e);
+  }
 }
 
 // スマホのカメラ写真は数MBになることがあり、AIへ送るデータが大きくなりすぎると
@@ -1364,6 +1490,12 @@ function resizeImage(dataUrl, maxSize, callback) {
 // ===== SCREEN 6: 仮説 =====
 async function goToHypothesis() {
   state.reflectionData.selflike = document.getElementById('answer-selflike').value;
+  const themeCategory = (state.themesShown || []).find(t => t.title === state.selectedTheme)?.category || null;
+  dbUpdate('reflections', state.reflectionsId, {
+    selflike: state.reflectionData.selflike,
+    selected_theme: state.selectedTheme,
+    theme_category: themeCategory
+  });
   showScreen('screen-hypothesis');
   if (!state.hypothesis) {
     document.getElementById('loading-hypothesis').style.display = 'block';
@@ -1469,6 +1601,22 @@ JSONのみ返してください。`;
     state.hypothesis = json;
     document.getElementById('hypothesis-error').style.display = 'none';
     renderHypothesis(json);
+    state.aiInsightsId = crypto.randomUUID();
+    dbInsert('ai_insights', {
+      id: state.aiInsightsId,
+      session_id: state.sessionId,
+      genius_name: json.geniusName,
+      hypothesis: json.hypothesis,
+      wants: json.wants,
+      being: json.being,
+      genius_moves: json.geniusMoves,
+      energy_source: json.energySource,
+      energy_leak: json.energyLeak,
+      odd_charm: json.oddCharm,
+      quest: json.quest,
+      evidence: json.evidence,
+      drawing_url: state.drawingUrl
+    });
   } catch(e) {
     console.error(e);
     // フォールバック仮説
@@ -1561,6 +1709,18 @@ function selectReaction(type, el) {
 // ===== SCREEN 7: 発見カード =====
 function goToCard() {
   state.reactionNote = document.getElementById('reaction-text').value;
+  if (state.aiInsightsId) {
+    dbUpdate('ai_insights', state.aiInsightsId, {
+      reaction: state.reaction || null,
+      reaction_note: state.reactionNote
+    });
+  }
+  if (state.sessionId) {
+    dbUpdate('sessions', state.sessionId, {
+      finished_at: new Date().toISOString(),
+      completion_status: 'completed'
+    });
+  }
   renderCard();
   showScreen('screen-card');
 }
@@ -1626,6 +1786,10 @@ async function callClaude(prompt, useSystem = false, systemPrompt = '', content 
 
 // ===== リセット =====
 function resetAll() {
+  state.sessionId = null;
+  state.reflectionsId = null;
+  state.aiInsightsId = null;
+  state.drawingUrl = null;
   state.nickname = '';
   state.selectedArts = [];
   state.focusArt = null;
@@ -1663,6 +1827,7 @@ function resetAll() {
 
 // ===== 起動時の初期化：進行状況の復元 =====
 (function initApp() {
+  ensureUserId();
   if (new URLSearchParams(location.search).has('reset')) {
     clearProgress();
   } else {
