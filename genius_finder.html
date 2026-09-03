@@ -3,32 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>GENIUS FINDER</title>
+<title>MY genius JOURNEY</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Space+Grotesk:wght@500;600&display=swap">
 <style>
   :root {
-    --bg: #100b1a;
-    --surface: #1c1428;
-    --surface2: #271c38;
-    --border: #3a2c4d;
-    --text: #f5f0ff;
-    --sub: #a396bd;
-    --accent: #ffb84d;
-    --accent2: #7ee8d8;
-    --pop: #ff6b9d;
-    --pop2: #ffd166;
-    --green: #6ec89a;
-    --danger: #ff6b7a;
-    --radius: 16px;
-    --radius-sm: 10px;
+    --bg: #FBF7EE;
+    --surface: #FFFFFF;
+    --surface2: #F5EFE0;
+    --border: #E6DAC3;
+    --text: #2B2620;
+    --sub: #8C8172;
+    --accent: #FFD93D;
+    --accent2: #C99A3E;
+    --pop: #3F7D4A;
+    --pop2: #4FA65C;
+    --green: #3F7D4A;
+    --danger: #C1503E;
+    --radius: 28px;
+    --radius-sm: 18px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     font-size: 15px;
     line-height: 1.6;
+  }
+  h1, h2, .btn, .hyp-name, .card-genius-name, .theme-card .theme-text {
+    font-family: 'Zen Maru Gothic', 'Zen Kaku Gothic New', sans-serif;
   }
 
   /* ── ヘッダー ── */
@@ -39,10 +43,11 @@
     justify-content: space-between;
   }
   .logo {
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 13px;
-    letter-spacing: 0.2em;
-    color: var(--accent);
-    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--text);
+    font-weight: 600;
   }
   .step-indicator {
     font-size: 12px;
@@ -57,8 +62,8 @@
   h2 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
   .sub-text { color: var(--sub); font-size: 13px; margin-bottom: 24px; }
   .humor {
-    background: linear-gradient(135deg, rgba(255,107,157,0.12), rgba(255,209,102,0.10));
-    border: 1px dashed rgba(255,184,77,0.5);
+    background: linear-gradient(135deg, rgba(255,217,61,0.16), rgba(79,166,92,0.10));
+    border: 1px dashed rgba(255,217,61,0.6);
     padding: 12px 16px;
     border-radius: var(--radius-sm);
     font-size: 13px;
@@ -85,7 +90,7 @@
     text-align: center;
   }
   .btn:active { opacity: 0.7; }
-  .btn-primary { background: linear-gradient(135deg, var(--pop), var(--accent)); color: #1a0f10; box-shadow: 0 6px 16px rgba(255,107,157,0.25); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--pop2)); color: #241f18; box-shadow: 0 6px 16px rgba(255,217,61,0.35); }
   .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
   .btn-ghost { background: transparent; color: var(--sub); font-size: 13px; padding: 10px; }
   .btn + .btn { margin-top: 10px; }
@@ -115,7 +120,7 @@
   .start-visual {
     width: 100%;
     height: 180px;
-    background: linear-gradient(135deg, #ff6b9d 0%, #ffb84d 50%, #7ee8d8 100%);
+    background: linear-gradient(135deg, #FFD93D 0%, #F5EFE0 55%, #4FA65C 100%);
     border-radius: var(--radius);
     display: flex;
     align-items: center;
@@ -134,14 +139,16 @@
     position: absolute;
     bottom: 16px;
     left: 20px;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 12px;
-    color: rgba(255,255,255,0.5);
-    letter-spacing: 0.15em;
+    color: rgba(43,38,32,0.55);
+    letter-spacing: 0.1em;
   }
   .tagline {
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 13px;
-    color: var(--accent);
-    letter-spacing: 0.1em;
+    color: var(--pop);
+    letter-spacing: 0.08em;
     margin-bottom: 8px;
     font-weight: 600;
   }
@@ -222,7 +229,7 @@
     font-size: 13px;
     margin-bottom: 16px;
   }
-  .select-count span { color: var(--accent); font-weight: 700; }
+  .select-count span { color: var(--pop); font-weight: 700; }
 
   /* アート拡大モーダル */
   .modal-overlay {
@@ -332,7 +339,7 @@
     transition: border-color 0.15s;
   }
   .theme-card.selected { border-color: var(--accent); }
-  .theme-card .theme-label { font-size: 11px; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 6px; }
+  .theme-card .theme-label { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: var(--pop); letter-spacing: 0.08em; margin-bottom: 6px; }
   .theme-card .theme-text { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
   .theme-card .theme-hint { font-size: 12px; color: var(--sub); }
   #loading-theme {
@@ -353,10 +360,11 @@
 
   /* ── SCREEN 5: 創作 ── */
   .timer-display {
+    font-family: 'Space Grotesk', sans-serif;
     text-align: center;
     font-size: 48px;
-    font-weight: 700;
-    color: var(--accent);
+    font-weight: 600;
+    color: var(--pop);
     margin: 16px 0;
     font-variant-numeric: tabular-nums;
   }
@@ -397,10 +405,11 @@
   }
   .hyp-section { margin-bottom: 20px; }
   .hyp-label {
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 11px;
-    letter-spacing: 0.15em;
-    color: var(--accent);
-    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--pop);
+    font-weight: 600;
     margin-bottom: 6px;
   }
   .hyp-name {
@@ -422,7 +431,7 @@
     content: '·';
     position: absolute;
     left: 0;
-    color: var(--accent);
+    color: var(--pop);
   }
   .reaction-row {
     display: flex;
@@ -450,9 +459,9 @@
 
   /* ── SCREEN 7: 今日の発見カード ── */
   .genius-card {
-    background: linear-gradient(135deg, #2a1a3e 0%, #1c1428 100%);
+    background: linear-gradient(135deg, #3A322A 0%, #241F18 100%);
     border: 1px solid var(--accent);
-    border-radius: 20px;
+    border-radius: 28px;
     padding: 28px 24px;
     margin-bottom: 24px;
     position: relative;
@@ -463,7 +472,7 @@
     position: absolute;
     top: -40px; right: -40px;
     width: 140px; height: 140px;
-    background: radial-gradient(circle, rgba(255,107,157,0.22), transparent 70%);
+    background: radial-gradient(circle, rgba(255,217,61,0.22), transparent 70%);
     border-radius: 50%;
   }
   .genius-card::after {
@@ -471,14 +480,15 @@
     position: absolute;
     bottom: -30px; left: -30px;
     width: 100px; height: 100px;
-    background: radial-gradient(circle, rgba(126,232,216,0.18), transparent 70%);
+    background: radial-gradient(circle, rgba(79,166,92,0.20), transparent 70%);
     border-radius: 50%;
   }
   .card-eyebrow {
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 10px;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 600;
     margin-bottom: 16px;
   }
   .card-genius-name {
@@ -486,22 +496,24 @@
     font-weight: 700;
     line-height: 1.3;
     margin-bottom: 20px;
-    color: #fff;
+    color: #FBF7EE;
   }
   .card-row { margin-bottom: 14px; }
   .card-row-label {
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 10px;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.12em;
     color: var(--accent);
     margin-bottom: 4px;
   }
-  .card-row-value { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+  .card-row-value { font-size: 13px; color: rgba(251,247,238,0.85); line-height: 1.5; }
   .card-version {
     position: absolute;
     bottom: 14px;
     right: 16px;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 10px;
-    color: rgba(255,255,255,0.2);
+    color: rgba(251,247,238,0.25);
   }
   .share-note { text-align: center; font-size: 13px; color: var(--sub); margin-bottom: 20px; }
 
@@ -534,7 +546,7 @@
 
   /* ── エラー通知 ── */
   .error-banner {
-    background: rgba(255,107,122,0.12);
+    background: rgba(193,80,62,0.08);
     border: 1px solid var(--danger);
     color: var(--text);
     padding: 12px 16px;
@@ -571,7 +583,7 @@
 
 <!-- ヘッダー -->
 <div class="header">
-  <div class="logo">GENIUS FINDER</div>
+  <div class="logo">MY genius JOURNEY</div>
   <div class="step-indicator" id="step-label"></div>
 </div>
 <div class="subheader" id="back-bar" style="display:none">
@@ -581,19 +593,19 @@
 <!-- ===== SCREEN 1: スタート ===== -->
 <div class="screen active" id="screen-start">
   <div class="start-visual">
-    <div class="start-visual-text">GENIUS FINDER v0.1</div>
+    <div class="start-visual-text">MY genius JOURNEY</div>
   </div>
-  <p class="tagline">✨ ようこそ、GENIUS FINDERへ</p>
-  <h1>才能を証明する<br>場所ではありません。<br>変なところを拾う場所です。</h1>
+  <p class="tagline">✨ MY genius JOURNEY</p>
+  <h1>MY geniusの世界へ、<br>ようこそ。<br>これから、あなたを探求する旅に出ましょう。</h1>
   <p class="sub-text" style="margin-top:8px">アートを見て、感じて、描く。その小さな反応から、自分でもまだ会ったことのない自分に出会いにいきます。</p>
-  <div class="humor">正解は存在しません。もし出てきたら、それは早とちりです。</div>
+  <div class="humor">この世界には、評価や否定は存在しません。正解のない海を泳ぎ、思うままに広がる道を歩いていきましょう。</div>
   <div class="field">
     <label>呼び名（なんでもOK）</label>
     <input type="text" id="nickname" placeholder="例：たろう、みどり、謎の人..." oninput="autosaveNickname(this.value)">
   </div>
   <div class="consent-item">
     <input type="checkbox" id="consent1">
-    <label for="consent1">アートへの反応や回答をもとに、GENIUS FINDERが仮説をつくることに同意します</label>
+    <label for="consent1">アートへの反応や回答をもとに、MY genius JOURNEYが仮説をつくることに同意します</label>
   </div>
   <div class="consent-item">
     <input type="checkbox" id="consent2">
@@ -607,7 +619,7 @@
 <div class="screen" id="screen-art">
   <h2>🎨 ビビッときた3つは？</h2>
   <p class="sub-text">9作品の中から、気になる3つをタップ。<br>「好き」じゃなくても「なぜか気になる」で全然OKです。</p>
-  <div class="humor">迷った作品も、あなたをチラ見しています。</div>
+  <div class="humor">迷ったとしても、選んだ結果があなたらしさです。</div>
   <div class="select-count">選択中：<span id="select-count">0</span> / 3</div>
   <div class="art-grid" id="art-grid"></div>
   <button class="btn btn-primary" id="btn-art-next" onclick="goToFocus()" disabled>この3つでいく！</button>
@@ -631,7 +643,7 @@
 <!-- ===== SCREEN 3: 言語化 ===== -->
 <div class="screen" id="screen-reflection">
   <h2>💭 感じたこと、正直に教えて</h2>
-  <p class="sub-text">この1枚について、深く考えずに答えてください。<br>一瞬で出てきた言葉ほど、たぶん当たっています。</p>
+  <p class="sub-text">この1枚について、たずねていきます。深く考えなくて大丈夫。<br>一瞬で浮かび上がる言葉ほど、あなたを表しやすいものです。</p>
   <div class="focus-art-display" id="focus-art-display"></div>
   <p class="other-arts-label">他に気になった作品</p>
   <div class="selected-arts-row" id="selected-arts-row"></div>
@@ -691,10 +703,10 @@
 <!-- ===== SCREEN 4: テーマ生成 ===== -->
 <div class="screen" id="screen-theme">
   <h2>🎁 あなただけのお題、届きました</h2>
-  <p class="sub-text">回答をもとに、3つのテーマをひねり出しました。<br>一番ピンときたものを選んでください。</p>
+  <p class="sub-text">回答をもとに、３つのテーマが浮かび上がってきました。<br>一番ピンときたものを選んでください。</p>
   <div id="loading-theme">
     <div class="spinner"></div>
-    うんうん唸りながら考え中...
+    あなたのユニークネスを呼び起こしています...
   </div>
   <div id="theme-error" class="error-banner" style="display:none">
     <span id="theme-error-text"></span>
@@ -1173,7 +1185,7 @@ function buildThemePrompt() {
     ? `\n## 過去に提示済みのテーマ（重複禁止）\n${state.themeHistory.map(t => `- ${t}`).join('\n')}\nこれらと同じ、または似た切り口のテーマは避け、まったく違う角度のテーマにしてください。\n`
     : '';
   return `
-あなたはGENIUS FINDERのAIです。ユーザーのアートへの反応を元に、創作テーマを3つ提案してください。
+あなたはMY genius JOURNEYのAIです。ユーザーのアートへの反応を元に、創作テーマを3つ提案してください。
 口調・世界観：温かく、少しズレていて、面白がる。堅苦しい教育的な言い回しは禁止。本人・作品を笑いの対象にはしない。
 
 ## ユーザーの回答
@@ -1369,7 +1381,7 @@ async function generateHypothesis() {
   const focusTitle = focusArtwork?.title || '';
   const otherArtworks = state.selectedArts.filter(id => id !== state.focusArt).map(id => artworks.find(a => a.id === id)).filter(Boolean);
 
-  const systemPrompt = `あなたはGENIUS FINDERのAIコーチです。親しみやすく、少しズレていて、押しつけがましくない先生のような存在。
+  const systemPrompt = `あなたはMY genius JOURNEYのAIコーチです。親しみやすく、少しズレていて、押しつけがましくない先生のような存在。
 ユーザーのアートへの反応・言語化・創作から、その人固有のWants・Being・Geniusを仮説として提示します。
 
 口調のルール（重要）：
