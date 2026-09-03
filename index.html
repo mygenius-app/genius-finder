@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>MY genius JOURNEY</title>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Space+Grotesk:wght@500;600&display=swap">
+<title>MY genius JOURNEY</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Space+Grotesk:wght@500;600&display=swap">
 <style>
   :root {
     --bg: #FBF7EE;
@@ -1822,30 +1820,162 @@ function renderCard() {
   document.getElementById('card-date').textContent = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} — ${state.nickname}`;
 }
 
-// カード画面を1枚の画像として書き出す（html2canvas使用、CDN読み込み）
+// カード画像の書き出し（Canvas APIで直接描画。html2canvasは外部フォント再取得で
+// 実機の通信状況によっては固まる/失敗することがあったため使わない）
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function wrapCardText(ctx, text, maxWidth) {
+  const lines = [];
+  const paragraphs = String(text || '').split('\n');
+  for (const para of paragraphs) {
+    let line = '';
+    for (const ch of para) {
+      const test = line + ch;
+      if (line && ctx.measureText(test).width > maxWidth) {
+        lines.push(line);
+        line = ch;
+      } else {
+        line = test;
+      }
+    }
+    lines.push(line);
+  }
+  return lines;
+}
+
+// 文字送りを手動計算して描く（canvasのletterSpacingは対応環境がまだ限られるため使わない）
+function drawTrackedText(ctx, text, x, y, trackingEm) {
+  const m = /(\d+(?:\.\d+)?)px/.exec(ctx.font);
+  const fontSize = m ? parseFloat(m[1]) : 16;
+  const spacing = trackingEm * fontSize;
+  let cx = x;
+  for (const ch of text) {
+    ctx.fillText(ch, cx, y);
+    cx += ctx.measureText(ch).width + spacing;
+  }
+}
+
+function renderCardCanvas() {
+  const S = 2; // 2倍解像度で書き出す
+  const width = 440 * S;
+  const padX = 24 * S;
+  const padY = 28 * S;
+  const rowGap = 14 * S;
+  const labelGap = 4 * S;
+  const eyebrowGap = 16 * S;
+  const nameGap = 20 * S;
+  const footerGap = 20 * S;
+  const contentWidth = width - padX * 2;
+
+  const eyebrowText = document.querySelector('.card-eyebrow').textContent;
+  const nameText = document.getElementById('card-name').textContent;
+  const dateText = document.getElementById('card-date').textContent;
+  const rows = [
+    ['WANTS — 内側から求めていること', document.getElementById('card-wants').textContent],
+    ['BEING — 自然でいられる状態', document.getElementById('card-being').textContent],
+    ['GENIUS MOVES — あなたの生み出し方', document.getElementById('card-moves').textContent],
+    ['ENERGY SOURCE — 火がつく条件', document.getElementById('card-energy-source').textContent],
+    ['ENERGY LEAK — しぼむ条件', document.getElementById('card-energy-leak').textContent],
+    ['ODD CHARM — 妙な魅力', document.getElementById('card-odd-charm').textContent],
+    ['CURRENT QUEST — 今試したいこと', document.getElementById('card-quest').textContent]
+  ];
+
+  const ctx0 = document.createElement('canvas').getContext('2d');
+
+  let y = padY;
+  ctx0.font = `600 ${10 * S}px 'Space Grotesk', sans-serif`;
+  y += 10 * S * 1.2 + eyebrowGap;
+
+  ctx0.font = `700 ${20 * S}px 'Zen Maru Gothic', sans-serif`;
+  const nameLines = wrapCardText(ctx0, nameText, contentWidth);
+  y += nameLines.length * (20 * S * 1.3) + nameGap;
+
+  const rowLines = [];
+  ctx0.font = `400 ${13 * S}px 'Zen Kaku Gothic New', sans-serif`;
+  for (const [, value] of rows) {
+    const lines = wrapCardText(ctx0, value, contentWidth);
+    rowLines.push(lines);
+    y += 10 * S * 1.2 + labelGap;
+    y += lines.length * (13 * S * 1.5) + rowGap;
+  }
+  y += footerGap + 10 * S * 1.2 + padY;
+
+  const height = Math.ceil(y);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  const grad = ctx.createLinearGradient(0, 0, width, height);
+  grad.addColorStop(0, '#3A322A');
+  grad.addColorStop(1, '#241F18');
+  ctx.fillStyle = grad;
+  roundRectPath(ctx, 0, 0, width, height, 28 * S);
+  ctx.fill();
+
+  ctx.strokeStyle = '#FFD93D';
+  ctx.lineWidth = 1 * S;
+  roundRectPath(ctx, 0.5 * S, 0.5 * S, width - 1 * S, height - 1 * S, 28 * S);
+  ctx.stroke();
+
+  ctx.textBaseline = 'top';
+  let cy = padY;
+
+  ctx.font = `600 ${10 * S}px 'Space Grotesk', sans-serif`;
+  ctx.fillStyle = '#FFD93D';
+  drawTrackedText(ctx, eyebrowText, padX, cy, 0.18);
+  cy += 10 * S * 1.2 + eyebrowGap;
+
+  ctx.font = `700 ${20 * S}px 'Zen Maru Gothic', sans-serif`;
+  ctx.fillStyle = '#FBF7EE';
+  for (const line of nameLines) {
+    ctx.fillText(line, padX, cy);
+    cy += 20 * S * 1.3;
+  }
+  cy += nameGap;
+
+  for (let i = 0; i < rows.length; i++) {
+    const [label] = rows[i];
+    ctx.font = `600 ${10 * S}px 'Space Grotesk', sans-serif`;
+    ctx.fillStyle = '#FFD93D';
+    drawTrackedText(ctx, label, padX, cy, 0.12);
+    cy += 10 * S * 1.2 + labelGap;
+
+    ctx.font = `400 ${13 * S}px 'Zen Kaku Gothic New', sans-serif`;
+    ctx.fillStyle = 'rgba(251,247,238,0.85)';
+    for (const line of rowLines[i]) {
+      ctx.fillText(line, padX, cy);
+      cy += 13 * S * 1.5;
+    }
+    cy += rowGap;
+  }
+
+  cy += footerGap;
+  ctx.font = `500 ${10 * S}px 'Space Grotesk', sans-serif`;
+  ctx.fillStyle = 'rgba(251,247,238,0.45)';
+  const dateWidth = ctx.measureText(dateText).width;
+  ctx.fillText(dateText, width - padX - dateWidth, cy);
+
+  return canvas;
+}
+
 async function saveCardAsImage() {
   const btn = document.getElementById('save-card-btn');
   const original = btn.textContent;
-  if (typeof html2canvas === 'undefined') {
-    alert('画像作成の準備ができていません。通信状況を確認してもう一度お試しください。');
-    return;
-  }
   btn.textContent = '作成中...';
   btn.disabled = true;
   try {
-    const cardEl = document.getElementById('genius-card');
-    // foreignObjectRendering: ページの外部フォント(Google Fonts)を逐一取得・埋め込みしようとして
-    // 通信状況によっては固まる問題があったため、ブラウザの描画をそのまま使う軽量な方式に切り替える
-    const html2canvasPromise = html2canvas(cardEl, {
-      backgroundColor: null,
-      scale: 2,
-      useCORS: true,
-      foreignObjectRendering: true,
-      windowWidth: document.documentElement.clientWidth,
-      windowHeight: document.documentElement.clientHeight
-    });
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 12000));
-    const canvas = await Promise.race([html2canvasPromise, timeoutPromise]);
+    // すでにページ内で使われているフォントなので通常は読み込み済みだが、念のため待つ
+    try { await document.fonts.ready; } catch (e) { /* 待てなくても続行 */ }
+    const canvas = renderCardCanvas();
     const link = document.createElement('a');
     const safeName = (state.nickname || 'MY_GENIUS_CARD').replace(/[^\w\p{L}\p{N}]/gu, '_');
     link.download = `MY_GENIUS_CARD_${safeName}.png`;
@@ -1853,11 +1983,7 @@ async function saveCardAsImage() {
     link.click();
   } catch (e) {
     console.error('saveCardAsImage failed', e);
-    if (e.message === 'timeout') {
-      alert('画像の作成に時間がかかりすぎたため中止しました。お手数ですがスクリーンショットをお試しください。');
-    } else {
-      alert('画像の保存に失敗しました。お手数ですがスクリーンショットをお試しください。');
-    }
+    alert('画像の保存に失敗しました。お手数ですがスクリーンショットをお試しください。');
   } finally {
     btn.textContent = original;
     btn.disabled = false;
