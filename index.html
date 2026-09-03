@@ -847,6 +847,29 @@
     </div>
     <div class="card-version" id="card-date"></div>
   </div>
+
+  <!-- QUEST実行報告（簡易版）
+       本来は「後で（例：夜）戻ってきて報告する」形を想定していたが、
+       戻ってくる導線を別途作る必要があり複雑になるため、
+       v0.2ではこのカード画面内でその場に意思確認する形にとどめている。 -->
+  <div class="question-block" id="quest-report">
+    <div class="question-label">このQUEST、試してみますか？<br><small style="color:var(--sub);font-weight:400">※その場での意思確認です。実際に試すのはこの後いつでも大丈夫です。</small></div>
+    <div class="reaction-row">
+      <div class="reaction-btn agree" id="quest-done-btn" onclick="reportQuest(true, this)">
+        <span class="icon">✓</span>
+        <span>もうやってみた！</span>
+      </div>
+      <div class="reaction-btn pending" id="quest-later-btn" onclick="reportQuest(false, this)">
+        <span class="icon">◯</span>
+        <span>また今度</span>
+      </div>
+    </div>
+    <div id="quest-note-field" style="display:none">
+      <label>何が起きた？（任意）</label>
+      <textarea id="quest-note" placeholder="一言でも" oninput="saveQuestNote(this.value)"></textarea>
+    </div>
+  </div>
+
   <p class="share-note">スクショで保存・自慢してOKです</p>
   <a class="btn btn-primary" href="https://docs.google.com/forms/d/e/1FAIpQLSdjVm9UnQzaTYt0hapGQfdI2EJcAtoI8DUo0FLX8jDCSZq_Gg/viewform" target="_blank" rel="noopener" style="text-decoration:none;box-sizing:border-box">感想をアンケートで教えてください</a>
   <button class="btn btn-secondary" onclick="resetAll()">もう一回、遊んでみる</button>
@@ -863,6 +886,7 @@ const state = {
   reflectionData: {},
   reflectionsId: null,
   aiInsightsId: null,
+  questId: null,
   selectedTheme: '',
   themesShown: null,
   themeHistory: [],
@@ -1635,6 +1659,12 @@ JSONのみ返してください。`;
       evidence: json.evidence,
       drawing_url: state.drawingUrl
     });
+    state.questId = crypto.randomUUID();
+    dbInsert('quests', {
+      id: state.questId,
+      session_id: state.sessionId,
+      quest_text: json.quest
+    });
   } catch(e) {
     console.error(e);
     // フォールバック仮説
@@ -1724,6 +1754,31 @@ function selectReaction(type, el) {
   }
 }
 
+// ===== QUEST実行報告（簡易版。カード画面内でその場に意思確認するだけで、
+//       後日戻ってきて報告する導線は持たない） =====
+function reportQuest(done, el) {
+  document.querySelectorAll('#quest-report .reaction-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  const noteField = document.getElementById('quest-note-field');
+  if (done) {
+    noteField.style.display = 'block';
+  } else {
+    noteField.style.display = 'none';
+  }
+  if (state.questId) {
+    dbUpdate('quests', state.questId, {
+      completed: done,
+      completed_at: new Date().toISOString()
+    });
+  }
+}
+
+function saveQuestNote(value) {
+  if (state.questId) {
+    dbUpdate('quests', state.questId, { result_note: value });
+  }
+}
+
 // ===== SCREEN 7: 発見カード =====
 function goToCard() {
   state.reactionNote = document.getElementById('reaction-text').value;
@@ -1807,6 +1862,7 @@ function resetAll() {
   state.sessionId = null;
   state.reflectionsId = null;
   state.aiInsightsId = null;
+  state.questId = null;
   state.drawingUrl = null;
   state.nickname = '';
   state.selectedArts = [];
@@ -1832,6 +1888,9 @@ function resetAll() {
   document.getElementById('answer-selflike').value = '';
   document.getElementById('reaction-text').value = '';
   document.getElementById('reaction-note').style.display = 'none';
+  document.getElementById('quest-note').value = '';
+  document.getElementById('quest-note-field').style.display = 'none';
+  document.querySelectorAll('#quest-report .reaction-btn.selected').forEach(el => el.classList.remove('selected'));
   document.getElementById('theme-error').style.display = 'none';
   document.getElementById('hypothesis-error').style.display = 'none';
   document.querySelectorAll('.emotion-tag.selected').forEach(el => el.classList.remove('selected'));
