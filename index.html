@@ -1278,6 +1278,9 @@ function describeApiError(e) {
   if (/payload|too large|413|request.*large/i.test(msg)) {
     return '送るデータ（画像など）が大きすぎたようです。写真のサイズが大きい場合、うまく送れないことがあります。';
   }
+  if (/truncated|max_tokens/i.test(msg)) {
+    return 'AIの返答が長すぎて途中で切れてしまいました。もう一度試してください（続くようであればスタッフに伝えてください）。';
+  }
   if (/Failed to fetch|NetworkError|network/i.test(msg)) {
     return '通信がうまくいかなかったみたいです。電波状況を確認してください。';
   }
@@ -1461,7 +1464,7 @@ JSONのみ返してください。`;
       content = userPrompt;
     }
 
-    const res = await callClaude(userPrompt, true, systemPrompt, content);
+    const res = await callClaude(userPrompt, true, systemPrompt, content, 2048);
     const json = JSON.parse(res.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());
     state.hypothesis = json;
     document.getElementById('hypothesis-error').style.display = 'none';
@@ -1589,10 +1592,10 @@ function renderCard() {
 // クライアントはキーを一切持たない。
 const GENIUS_PROXY_URL = 'https://isopjepdxjoigjvoztde.supabase.co/functions/v1/genius-proxy';
 
-async function callClaude(prompt, useSystem = false, systemPrompt = '', content = null) {
+async function callClaude(prompt, useSystem = false, systemPrompt = '', content = null, maxTokens = 1024) {
   const body = {
     model: 'claude-sonnet-4-5',
-    max_tokens: 1024,
+    max_tokens: maxTokens,
     messages: [{
       role: 'user',
       content: content || prompt
@@ -1615,6 +1618,9 @@ async function callClaude(prompt, useSystem = false, systemPrompt = '', content 
     throw new Error(err.error?.message || 'API error');
   }
   const data = await res.json();
+  if (data.stop_reason === 'max_tokens') {
+    throw new Error('response truncated: hit max_tokens limit before finishing');
+  }
   return data.content[0].text;
 }
 
