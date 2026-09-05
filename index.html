@@ -630,6 +630,19 @@
     <label>お住まいの国（任意）</label>
     <input type="text" id="country" placeholder="例：日本">
   </div>
+  <div class="field">
+    <label>性別（任意）</label>
+    <select id="gender">
+      <option value="">回答しない</option>
+      <option value="男性">男性</option>
+      <option value="女性">女性</option>
+      <option value="その他">その他</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>職業（任意）</label>
+    <input type="text" id="occupation" placeholder="例：会社員">
+  </div>
   <div class="consent-item">
     <input type="checkbox" id="consent1">
     <label for="consent1">アートへの反応や回答をもとに、MY genius JOURNEYが仮説をつくることに同意します</label>
@@ -1032,12 +1045,17 @@ function goBack() {
 const PROGRESS_KEY = 'geniusFinderProgress_v1';
 
 function saveProgress() {
+  const activeScreen = screens.find(s => document.getElementById(s).classList.contains('active'));
   try {
-    const activeScreen = screens.find(s => document.getElementById(s).classList.contains('active'));
-    const { uploadedImage, ...stateToSave } = state;
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ state: stateToSave, screenHistory, activeScreen }));
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ state, screenHistory, activeScreen }));
   } catch (e) {
-    // 保存できなくても操作は継続させる（容量オーバー等）
+    // 画像込みだと容量オーバーになることがあるため、画像を除いた分だけでも保存を試みる
+    try {
+      const { uploadedImage, ...stateToSave } = state;
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify({ state: stateToSave, screenHistory, activeScreen }));
+    } catch (e2) {
+      // それでも保存できなければ諦める（操作は継続させる）
+    }
   }
 }
 
@@ -1062,6 +1080,12 @@ function restoreProgress() {
 
   Object.assign(state, saved.state);
   screenHistory = saved.screenHistory || [];
+
+  if (state.uploadedImage) {
+    const preview = document.getElementById('preview-img');
+    preview.src = state.uploadedImage;
+    preview.style.display = 'block';
+  }
 
   if (state.nickname) document.getElementById('nickname').value = state.nickname;
   if (state.selectedArts.length) renderArtGrid();
@@ -1146,7 +1170,9 @@ function goToArtSelect() {
     consent_hypothesis: true,
     consent_disclaimer: true,
     age_range: document.getElementById('age-range').value || null,
-    country: document.getElementById('country').value.trim() || null
+    country: document.getElementById('country').value.trim() || null,
+    gender: document.getElementById('gender').value || null,
+    occupation_category: document.getElementById('occupation').value.trim() || null
   });
   dbInsert('sessions', {
     id: state.sessionId,
@@ -2127,6 +2153,8 @@ function resetAll() {
   document.getElementById('nickname').value = '';
   document.getElementById('age-range').value = '';
   document.getElementById('country').value = '';
+  document.getElementById('gender').value = '';
+  document.getElementById('occupation').value = '';
   document.getElementById('preview-img').style.display = 'none';
   document.getElementById('preview-img').src = '';
   document.getElementById('upload-input').value = '';
