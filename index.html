@@ -547,6 +547,34 @@
     color: rgba(251,247,238,0.4);
     text-align: right;
   }
+  .gallery-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .gallery-row-title {
+    font-family: 'Zen Maru Gothic', 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .gallery-row-meta { font-size: 12px; color: var(--sub); }
+  .gallery-row-arrow { color: var(--sub); font-size: 18px; flex-shrink: 0; }
+  .gallery-detail-content {
+    max-width: 440px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+  }
 
   /* ── プログレスバー ── */
   .progress-bar {
@@ -939,6 +967,14 @@
   <div id="gallery-empty" style="display:none;color:var(--sub);text-align:center;padding:24px 0">まだ公開されているカードがありません。</div>
   <div id="gallery-error" style="display:none;color:var(--sub);text-align:center;padding:24px 0">読み込みに失敗しました。もう一度お試しください。</div>
   <div id="gallery-list"></div>
+</div>
+
+<!-- ギャラリー詳細（一覧の項目をタップした時に中身を表示） -->
+<div class="modal-overlay" id="gallery-detail-modal" onclick="if(event.target===this) closeGalleryDetail()">
+  <div class="gallery-detail-content">
+    <button class="modal-close" onclick="closeGalleryDetail()">×</button>
+    <div id="gallery-detail-card"></div>
+  </div>
 </div>
 
 <script>
@@ -1931,6 +1967,7 @@ function openGallery() {
 }
 
 function closeGallery() {
+  document.getElementById('gallery-detail-modal').classList.remove('open');
   document.getElementById('screen-gallery').classList.remove('active');
   document.getElementById(galleryReturnScreen || 'screen-start').classList.add('active');
   window.scrollTo(0, 0);
@@ -1969,49 +2006,81 @@ async function loadGallery() {
   }
 }
 
-function renderGalleryCards(rows) {
-  const listEl = document.getElementById('gallery-list');
-  listEl.innerHTML = rows.map(row => {
-    const moves = Array.isArray(row.genius_moves) ? row.genius_moves.join(' · ') : (row.genius_moves || '');
-    const date = row.created_at ? new Date(row.created_at) : null;
-    const dateText = date ? `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}` : '';
-    return `
-      <div class="gallery-card">
-        <div class="card-eyebrow">✨ MY GENIUS CARD</div>
-        <div class="card-genius-name">${escapeHtml(row.genius_name)}</div>
-        <div class="card-name-accent"></div>
-        <div class="card-row">
-          <div class="card-row-label">💭 WANTS</div>
-          <div class="card-row-value">${escapeHtml(row.wants)}</div>
-        </div>
-        <div class="card-row">
-          <div class="card-row-label">🌿 BEING</div>
-          <div class="card-row-value">${escapeHtml(row.being)}</div>
-        </div>
-        <div class="card-row">
-          <div class="card-row-label">🔨 GENIUS MOVES</div>
-          <div class="card-row-value">${escapeHtml(moves)}</div>
-        </div>
-        <div class="card-row">
-          <div class="card-row-label">🔥 ENERGY SOURCE</div>
-          <div class="card-row-value">${escapeHtml(row.energy_source)}</div>
-        </div>
-        <div class="card-row">
-          <div class="card-row-label">🍂 ENERGY LEAK</div>
-          <div class="card-row-value">${escapeHtml(row.energy_leak)}</div>
-        </div>
-        <div class="card-row">
-          <div class="card-row-label">🌟 ODD CHARM</div>
-          <div class="card-row-value">${escapeHtml(row.odd_charm)}</div>
-        </div>
-        <div class="card-row">
-          <div class="card-row-label">🎯 CURRENT QUEST</div>
-          <div class="card-row-value">${escapeHtml(row.quest)}</div>
-        </div>
-        <div class="gallery-card-footer">${escapeHtml(dateText)} — ${escapeHtml(row.nickname || '')}</div>
+let galleryRows = [];
+
+function formatGalleryDate(isoString, includeDay) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  if (!includeDay) return `${y}.${m}`;
+  return `${y}.${m}.${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function buildGalleryCardHtml(row) {
+  const moves = Array.isArray(row.genius_moves) ? row.genius_moves.join(' · ') : (row.genius_moves || '');
+  const dateText = formatGalleryDate(row.created_at, true);
+  return `
+    <div class="gallery-card">
+      <div class="card-eyebrow">✨ MY GENIUS CARD</div>
+      <div class="card-genius-name">${escapeHtml(row.genius_name)}</div>
+      <div class="card-name-accent"></div>
+      <div class="card-row">
+        <div class="card-row-label">💭 WANTS</div>
+        <div class="card-row-value">${escapeHtml(row.wants)}</div>
       </div>
-    `;
-  }).join('');
+      <div class="card-row">
+        <div class="card-row-label">🌿 BEING</div>
+        <div class="card-row-value">${escapeHtml(row.being)}</div>
+      </div>
+      <div class="card-row">
+        <div class="card-row-label">🔨 GENIUS MOVES</div>
+        <div class="card-row-value">${escapeHtml(moves)}</div>
+      </div>
+      <div class="card-row">
+        <div class="card-row-label">🔥 ENERGY SOURCE</div>
+        <div class="card-row-value">${escapeHtml(row.energy_source)}</div>
+      </div>
+      <div class="card-row">
+        <div class="card-row-label">🍂 ENERGY LEAK</div>
+        <div class="card-row-value">${escapeHtml(row.energy_leak)}</div>
+      </div>
+      <div class="card-row">
+        <div class="card-row-label">🌟 ODD CHARM</div>
+        <div class="card-row-value">${escapeHtml(row.odd_charm)}</div>
+      </div>
+      <div class="card-row">
+        <div class="card-row-label">🎯 CURRENT QUEST</div>
+        <div class="card-row-value">${escapeHtml(row.quest)}</div>
+      </div>
+      <div class="gallery-card-footer">${escapeHtml(dateText)} — ${escapeHtml(row.nickname || '')}</div>
+    </div>
+  `;
+}
+
+function renderGalleryCards(rows) {
+  galleryRows = rows;
+  const listEl = document.getElementById('gallery-list');
+  listEl.innerHTML = rows.map((row, idx) => `
+    <div class="gallery-row" onclick="showGalleryDetail(${idx})">
+      <div>
+        <div class="gallery-row-title">${escapeHtml(row.genius_name)}</div>
+        <div class="gallery-row-meta">${escapeHtml(formatGalleryDate(row.created_at, false))} — ${escapeHtml(row.nickname || '')}</div>
+      </div>
+      <div class="gallery-row-arrow">›</div>
+    </div>
+  `).join('');
+}
+
+function showGalleryDetail(idx) {
+  const row = galleryRows[idx];
+  if (!row) return;
+  document.getElementById('gallery-detail-card').innerHTML = buildGalleryCardHtml(row);
+  document.getElementById('gallery-detail-modal').classList.add('open');
+}
+
+function closeGalleryDetail() {
+  document.getElementById('gallery-detail-modal').classList.remove('open');
 }
 
 // カード画像の書き出し（Canvas APIで直接描画。html2canvasは外部フォント再取得で
