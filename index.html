@@ -2123,7 +2123,7 @@ async function callClaude(prompt, useSystem = false, systemPrompt = '', content 
 
   if (!res.ok) {
     const err = await res.json();
-    throw new Error(err.error?.message || 'API error');
+    throw new Error(`${err.error?.message || 'API error'} (status ${res.status})`);
   }
   const data = await res.json();
   if (data.stop_reason === 'max_tokens') {
