@@ -2116,7 +2116,10 @@ async function callClaude(prompt, useSystem = false, systemPrompt = '', content 
   const res = await fetch(GENIUS_PROXY_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      // 端末ごとのレート制限用。会場のWi-Fiなど同一IPから多人数が使っても
+      // 一人あたりの枠で判定できるようにする(IP側の制限は全体の安全網として別途ある)。
+      'X-Device-Id': state.userId || ''
     },
     body: JSON.stringify(body)
   });
