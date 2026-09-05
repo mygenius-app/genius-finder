@@ -528,6 +528,26 @@
   }
   .share-note { text-align: center; font-size: 13px; color: var(--sub); margin-bottom: 20px; }
 
+  /* ── ギャラリー（公開カード一覧） ── */
+  .gallery-card {
+    background: linear-gradient(135deg, #3A322A 0%, #241F18 100%);
+    border: 1px solid var(--accent);
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .gallery-card .card-genius-name { font-size: 17px; margin-bottom: 10px; }
+  .gallery-card .card-name-accent { margin-bottom: 16px; }
+  .gallery-card .card-row { margin-bottom: 12px; }
+  .gallery-card .card-row:last-of-type { margin-bottom: 0; }
+  .gallery-card-footer {
+    margin-top: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    color: rgba(251,247,238,0.4);
+    text-align: right;
+  }
+
   /* ── プログレスバー ── */
   .progress-bar {
     height: 2px;
@@ -653,6 +673,7 @@
   </div>
   <br>
   <button class="btn btn-primary" onclick="goToArtSelect()">旅に出発する</button>
+  <button class="btn btn-ghost" onclick="openGallery()">他の人のGENIUSを見てみる</button>
 </div>
 
 <!-- ===== SCREEN 2: アート選択 ===== -->
@@ -895,10 +916,29 @@
     </div>
   </div>
 
+  <div class="consent-item">
+    <input type="checkbox" id="gallery-share-checkbox" onchange="toggleGalleryShare(this.checked)">
+    <label for="gallery-share-checkbox">このカードをギャラリーに公開する（任意）。公開すると、呼び名（ニックネーム）とカードの内容が他の人にも見られるようになります。あとでチェックを外せば以後は非公開にできますが、既に見た人にまでは取り消せません。</label>
+  </div>
+
   <p class="share-note">画像として保存、スクショで保存、どちらもOKです</p>
   <button class="btn btn-secondary" id="save-card-btn" onclick="saveCardAsImage()">🖼 画像として保存</button>
   <a class="btn btn-primary" href="https://docs.google.com/forms/d/e/1FAIpQLSdjVm9UnQzaTYt0hapGQfdI2EJcAtoI8DUo0FLX8jDCSZq_Gg/viewform" target="_blank" rel="noopener" style="text-decoration:none;box-sizing:border-box">感想をアンケートで教えてください</a>
+  <button class="btn btn-secondary" onclick="openGallery()">🖼 他の人のGENIUSを見てみる</button>
   <button class="btn btn-secondary" onclick="resetAll()">もう一回、遊んでみる</button>
+</div>
+
+<!-- ===== ギャラリー（本人が公開を選んだカードの一覧・閲覧専用） ===== -->
+<div class="screen" id="screen-gallery">
+  <button class="btn btn-ghost" onclick="closeGallery()">← 戻る</button>
+  <h2>🌟 みんなのGENIUS</h2>
+  <p class="sub-text">公開を選んだ人だけのカードが並びます。<br>コメントやいいねはありません、見るだけです。</p>
+  <div id="gallery-loading" style="text-align:center;padding:24px 0">
+    <div class="spinner"></div>
+  </div>
+  <div id="gallery-empty" style="display:none;color:var(--sub);text-align:center;padding:24px 0">まだ公開されているカードがありません。</div>
+  <div id="gallery-error" style="display:none;color:var(--sub);text-align:center;padding:24px 0">読み込みに失敗しました。もう一度お試しください。</div>
+  <div id="gallery-list"></div>
 </div>
 
 <script>
@@ -920,7 +960,8 @@ const state = {
   drawingUrl: null,
   hypothesis: null,
   reaction: '',
-  reactionNote: ''
+  reactionNote: '',
+  isPublic: false
 };
 
 let timerInterval = null;
@@ -1697,7 +1738,8 @@ JSONのみ返してください。`;
       odd_charm: json.oddCharm,
       quest: json.quest,
       evidence: json.evidence,
-      drawing_url: state.drawingUrl
+      drawing_url: state.drawingUrl,
+      nickname: state.nickname
     });
     state.questId = crypto.randomUUID();
     dbInsert('quests', {
@@ -1858,6 +1900,118 @@ function renderCard() {
 
   const now = new Date();
   document.getElementById('card-date').textContent = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} — ${state.nickname}`;
+
+  // 前回このセッションで公開済みならチェック状態を復元
+  document.getElementById('gallery-share-checkbox').checked = !!state.isPublic;
+}
+
+function toggleGalleryShare(checked) {
+  state.isPublic = checked;
+  if (!state.aiInsightsId) return;
+  dbUpdate('ai_insights', state.aiInsightsId, { is_public: checked });
+  saveProgress();
+}
+
+// ===== みんなのGENIUS（本人が公開を選んだカードだけの閲覧専用ギャラリー） =====
+let galleryReturnScreen = null;
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text == null ? '' : String(text);
+  return div.innerHTML;
+}
+
+function openGallery() {
+  const current = screens.find(s => document.getElementById(s).classList.contains('active'));
+  galleryReturnScreen = current || 'screen-start';
+  document.getElementById(galleryReturnScreen).classList.remove('active');
+  document.getElementById('screen-gallery').classList.add('active');
+  window.scrollTo(0, 0);
+  loadGallery();
+}
+
+function closeGallery() {
+  document.getElementById('screen-gallery').classList.remove('active');
+  document.getElementById(galleryReturnScreen || 'screen-start').classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+async function loadGallery() {
+  const loadingEl = document.getElementById('gallery-loading');
+  const emptyEl = document.getElementById('gallery-empty');
+  const errorEl = document.getElementById('gallery-error');
+  const listEl = document.getElementById('gallery-list');
+  loadingEl.style.display = 'block';
+  emptyEl.style.display = 'none';
+  errorEl.style.display = 'none';
+  listEl.innerHTML = '';
+
+  try {
+    const cols = 'genius_name,wants,being,genius_moves,energy_source,energy_leak,odd_charm,quest,nickname,created_at';
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/ai_insights?is_public=eq.true&select=${cols}&order=created_at.desc&limit=30`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    if (!res.ok) throw new Error('gallery fetch failed: ' + res.status);
+    const rows = await res.json();
+    loadingEl.style.display = 'none';
+    if (rows.length === 0) {
+      emptyEl.style.display = 'block';
+      return;
+    }
+    renderGalleryCards(rows);
+  } catch (e) {
+    console.error('loadGallery failed', e);
+    loadingEl.style.display = 'none';
+    errorEl.style.display = 'block';
+  }
+}
+
+function renderGalleryCards(rows) {
+  const listEl = document.getElementById('gallery-list');
+  listEl.innerHTML = rows.map(row => {
+    const moves = Array.isArray(row.genius_moves) ? row.genius_moves.join(' · ') : (row.genius_moves || '');
+    const date = row.created_at ? new Date(row.created_at) : null;
+    const dateText = date ? `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}` : '';
+    return `
+      <div class="gallery-card">
+        <div class="card-eyebrow">✨ MY GENIUS CARD</div>
+        <div class="card-genius-name">${escapeHtml(row.genius_name)}</div>
+        <div class="card-name-accent"></div>
+        <div class="card-row">
+          <div class="card-row-label">💭 WANTS</div>
+          <div class="card-row-value">${escapeHtml(row.wants)}</div>
+        </div>
+        <div class="card-row">
+          <div class="card-row-label">🌿 BEING</div>
+          <div class="card-row-value">${escapeHtml(row.being)}</div>
+        </div>
+        <div class="card-row">
+          <div class="card-row-label">🔨 GENIUS MOVES</div>
+          <div class="card-row-value">${escapeHtml(moves)}</div>
+        </div>
+        <div class="card-row">
+          <div class="card-row-label">🔥 ENERGY SOURCE</div>
+          <div class="card-row-value">${escapeHtml(row.energy_source)}</div>
+        </div>
+        <div class="card-row">
+          <div class="card-row-label">🍂 ENERGY LEAK</div>
+          <div class="card-row-value">${escapeHtml(row.energy_leak)}</div>
+        </div>
+        <div class="card-row">
+          <div class="card-row-label">🌟 ODD CHARM</div>
+          <div class="card-row-value">${escapeHtml(row.odd_charm)}</div>
+        </div>
+        <div class="card-row">
+          <div class="card-row-label">🎯 CURRENT QUEST</div>
+          <div class="card-row-value">${escapeHtml(row.quest)}</div>
+        </div>
+        <div class="gallery-card-footer">${escapeHtml(dateText)} — ${escapeHtml(row.nickname || '')}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 // カード画像の書き出し（Canvas APIで直接描画。html2canvasは外部フォント再取得で
@@ -2154,6 +2308,8 @@ function resetAll() {
   state.hypothesis = null;
   state.reaction = '';
   state.reactionNote = '';
+  state.isPublic = false;
+  document.getElementById('gallery-share-checkbox').checked = false;
   document.getElementById('nickname').value = '';
   document.getElementById('age-range').value = '';
   document.getElementById('country').value = '';
