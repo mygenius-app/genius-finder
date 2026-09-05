@@ -2028,20 +2028,42 @@ async function saveCardAsImage() {
   const original = btn.textContent;
   btn.textContent = '作成中...';
   btn.disabled = true;
+  let objectUrl = null;
   try {
     // すでにページ内で使われているフォントなので通常は読み込み済みだが、念のため待つ
     try { await document.fonts.ready; } catch (e) { /* 待てなくても続行 */ }
     const canvas = renderCardCanvas();
-    const link = document.createElement('a');
     const safeName = (state.nickname || 'MY_GENIUS_CARD').replace(/[^\w\p{L}\p{N}]/gu, '_');
-    link.download = `MY_GENIUS_CARD_${safeName}.png`;
-    link.href = canvas.toDataURL('image/png');
+    const fileName = `MY_GENIUS_CARD_${safeName}.png`;
+
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((b) => b ? resolve(b) : reject(new Error('toBlob returned null')), 'image/png');
+    });
+
+    // スマホでは共有シート経由で「写真に保存」を直接選べるようにする(対応環境のみ)
+    const file = new File([blob], fileName, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] });
+      return;
+    }
+
+    // 共有シート非対応環境ではダウンロードにフォールバック。
+    // data:URLではなくblob:URLを使う — Safariは<a download>がdata:URLだと
+    // 正しく働かず、ページ遷移として扱われて読み込みバーが固まることがあるため。
+    objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = objectUrl;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   } catch (e) {
+    if (e && e.name === 'AbortError') return; // 共有シートをキャンセルしただけ
     console.error('saveCardAsImage failed', e);
     const detail = (e && e.name ? e.name : 'Error') + ': ' + (e && e.message ? e.message : String(e));
     alert(`画像の保存に失敗しました。お手数ですがスクリーンショットをお試しください。\n\n(エラー詳細: ${detail})`);
   } finally {
+    if (objectUrl) setTimeout(() => URL.revokeObjectURL(objectUrl), 30000);
     btn.textContent = original;
     btn.disabled = false;
   }
