@@ -1919,6 +1919,7 @@ function renderCardCanvas() {
   ];
 
   const ctx0 = document.createElement('canvas').getContext('2d');
+  if (!ctx0) throw new Error('canvas 2d context unavailable (measure pass)');
 
   let y = padY;
   ctx0.font = `700 ${10 * S}px 'Space Grotesk', sans-serif`;
@@ -1945,6 +1946,7 @@ function renderCardCanvas() {
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('canvas 2d context unavailable (draw pass)');
 
   // 背景 + 柔らかい光彩（box-shadowの近似。境界線には影を落とさないよう別パスで描く）
   ctx.save();
@@ -2037,7 +2039,8 @@ async function saveCardAsImage() {
     link.click();
   } catch (e) {
     console.error('saveCardAsImage failed', e);
-    alert('画像の保存に失敗しました。お手数ですがスクリーンショットをお試しください。');
+    const detail = (e && e.name ? e.name : 'Error') + ': ' + (e && e.message ? e.message : String(e));
+    alert(`画像の保存に失敗しました。お手数ですがスクリーンショットをお試しください。\n\n(エラー詳細: ${detail})`);
   } finally {
     btn.textContent = original;
     btn.disabled = false;
