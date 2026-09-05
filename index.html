@@ -459,60 +459,72 @@
   /* ── SCREEN 7: 今日の発見カード ── */
   .genius-card {
     background: linear-gradient(135deg, #3A322A 0%, #241F18 100%);
-    border: 1px solid var(--accent);
-    border-radius: 28px;
-    padding: 28px 24px;
+    border: 2px solid var(--accent);
+    border-radius: 32px;
+    padding: 30px 26px;
     margin-bottom: 24px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 0 0 4px rgba(255,217,61,0.08), 0 14px 34px rgba(255,217,61,0.16);
   }
   .genius-card::before {
     content: '';
     position: absolute;
     top: -40px; right: -40px;
-    width: 140px; height: 140px;
-    background: radial-gradient(circle, rgba(255,217,61,0.22), transparent 70%);
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(255,217,61,0.26), transparent 70%);
     border-radius: 50%;
   }
   .genius-card::after {
     content: '';
     position: absolute;
     bottom: -30px; left: -30px;
-    width: 100px; height: 100px;
-    background: radial-gradient(circle, rgba(79,166,92,0.20), transparent 70%);
+    width: 110px; height: 110px;
+    background: radial-gradient(circle, rgba(79,166,92,0.24), transparent 70%);
     border-radius: 50%;
   }
   .card-eyebrow {
+    display: inline-block;
     font-family: 'Space Grotesk', sans-serif;
     font-size: 10px;
-    letter-spacing: 0.18em;
-    color: var(--accent);
-    font-weight: 600;
-    margin-bottom: 16px;
+    letter-spacing: 0.16em;
+    color: #241F18;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 18px;
   }
   .card-genius-name {
-    font-size: 20px;
+    font-size: 21px;
     font-weight: 700;
-    line-height: 1.3;
-    margin-bottom: 20px;
+    line-height: 1.35;
+    margin-bottom: 10px;
     color: #FBF7EE;
   }
-  .card-row { margin-bottom: 14px; }
+  .card-name-accent {
+    width: 36px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--pop2), transparent);
+    margin-bottom: 22px;
+  }
+  .card-row { margin-bottom: 16px; }
   .card-row-label {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 10px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     color: var(--accent);
-    margin-bottom: 4px;
+    margin-bottom: 5px;
   }
-  .card-row-value { font-size: 13px; color: rgba(251,247,238,0.85); line-height: 1.5; }
+  .card-row-value { font-size: 13px; color: rgba(251,247,238,0.9); line-height: 1.6; }
   .card-version {
     position: absolute;
     bottom: 14px;
-    right: 16px;
+    right: 18px;
     font-family: 'Space Grotesk', sans-serif;
     font-size: 10px;
-    color: rgba(251,247,238,0.25);
+    color: rgba(251,247,238,0.3);
   }
   .share-note { text-align: center; font-size: 13px; color: var(--sub); margin-bottom: 20px; }
 
@@ -814,34 +826,35 @@
   <h2>🎉 今日のあなた、できました</h2>
   <p class="sub-text">あなたのGENIUS、いったん仮置きしました。<br>持ち逃げOKです。</p>
   <div class="genius-card" id="genius-card">
-    <div class="card-eyebrow">MY GENIUS CARD — v0.1</div>
+    <div class="card-eyebrow">✨ MY GENIUS CARD — v0.1</div>
     <div class="card-genius-name" id="card-name"></div>
+    <div class="card-name-accent"></div>
     <div class="card-row">
-      <div class="card-row-label">WANTS — 内側から求めていること</div>
+      <div class="card-row-label">💭 WANTS — 内側から求めていること</div>
       <div class="card-row-value" id="card-wants"></div>
     </div>
     <div class="card-row">
-      <div class="card-row-label">BEING — 自然でいられる状態</div>
+      <div class="card-row-label">🌿 BEING — 自然でいられる状態</div>
       <div class="card-row-value" id="card-being"></div>
     </div>
     <div class="card-row">
-      <div class="card-row-label">GENIUS MOVES — あなたの生み出し方</div>
+      <div class="card-row-label">🔨 GENIUS MOVES — あなたの生み出し方</div>
       <div class="card-row-value" id="card-moves"></div>
     </div>
     <div class="card-row">
-      <div class="card-row-label">ENERGY SOURCE — 火がつく条件</div>
+      <div class="card-row-label">🔥 ENERGY SOURCE — 火がつく条件</div>
       <div class="card-row-value" id="card-energy-source"></div>
     </div>
     <div class="card-row">
-      <div class="card-row-label">ENERGY LEAK — しぼむ条件</div>
+      <div class="card-row-label">🍂 ENERGY LEAK — しぼむ条件</div>
       <div class="card-row-value" id="card-energy-leak"></div>
     </div>
     <div class="card-row">
-      <div class="card-row-label">ODD CHARM — 妙な魅力</div>
+      <div class="card-row-label">🌟 ODD CHARM — 妙な魅力</div>
       <div class="card-row-value" id="card-odd-charm"></div>
     </div>
     <div class="card-row">
-      <div class="card-row-label">CURRENT QUEST — 今試したいこと</div>
+      <div class="card-row-label">🎯 CURRENT QUEST — 今試したいこと</div>
       <div class="card-row-value" id="card-quest"></div>
     </div>
     <div class="card-version" id="card-date"></div>
@@ -1863,40 +1876,59 @@ function drawTrackedText(ctx, text, x, y, trackingEm) {
   }
 }
 
+// drawTrackedTextと同じ字送りルールで幅だけ測る（バッジの背景サイズ決めに使う）
+function measureTrackedWidth(ctx, text, trackingEm) {
+  const m = /(\d+(?:\.\d+)?)px/.exec(ctx.font);
+  const fontSize = m ? parseFloat(m[1]) : 16;
+  const spacing = trackingEm * fontSize;
+  let width = 0;
+  for (const ch of text) {
+    width += ctx.measureText(ch).width + spacing;
+  }
+  return width - spacing;
+}
+
 function renderCardCanvas() {
   const S = 2; // 2倍解像度で書き出す
   const width = 440 * S;
-  const padX = 24 * S;
-  const padY = 28 * S;
-  const rowGap = 14 * S;
-  const labelGap = 4 * S;
-  const eyebrowGap = 16 * S;
-  const nameGap = 20 * S;
+  const padX = 26 * S;
+  const padY = 30 * S;
+  const rowGap = 16 * S;
+  const labelGap = 5 * S;
+  const eyebrowGap = 18 * S;
+  const nameToAccentGap = 10 * S;
+  const accentToRowsGap = 22 * S;
   const footerGap = 20 * S;
   const contentWidth = width - padX * 2;
+  const pillPadX = 14 * S;
+  const pillPadY = 5 * S;
+  const accentBarWidth = 36 * S;
+  const accentBarHeight = 3 * S;
 
   const eyebrowText = document.querySelector('.card-eyebrow').textContent;
   const nameText = document.getElementById('card-name').textContent;
   const dateText = document.getElementById('card-date').textContent;
   const rows = [
-    ['WANTS — 内側から求めていること', document.getElementById('card-wants').textContent],
-    ['BEING — 自然でいられる状態', document.getElementById('card-being').textContent],
-    ['GENIUS MOVES — あなたの生み出し方', document.getElementById('card-moves').textContent],
-    ['ENERGY SOURCE — 火がつく条件', document.getElementById('card-energy-source').textContent],
-    ['ENERGY LEAK — しぼむ条件', document.getElementById('card-energy-leak').textContent],
-    ['ODD CHARM — 妙な魅力', document.getElementById('card-odd-charm').textContent],
-    ['CURRENT QUEST — 今試したいこと', document.getElementById('card-quest').textContent]
+    ['💭 WANTS — 内側から求めていること', document.getElementById('card-wants').textContent],
+    ['🌿 BEING — 自然でいられる状態', document.getElementById('card-being').textContent],
+    ['🔨 GENIUS MOVES — あなたの生み出し方', document.getElementById('card-moves').textContent],
+    ['🔥 ENERGY SOURCE — 火がつく条件', document.getElementById('card-energy-source').textContent],
+    ['🍂 ENERGY LEAK — しぼむ条件', document.getElementById('card-energy-leak').textContent],
+    ['🌟 ODD CHARM — 妙な魅力', document.getElementById('card-odd-charm').textContent],
+    ['🎯 CURRENT QUEST — 今試したいこと', document.getElementById('card-quest').textContent]
   ];
 
   const ctx0 = document.createElement('canvas').getContext('2d');
 
   let y = padY;
-  ctx0.font = `600 ${10 * S}px 'Space Grotesk', sans-serif`;
-  y += 10 * S * 1.2 + eyebrowGap;
+  ctx0.font = `700 ${10 * S}px 'Space Grotesk', sans-serif`;
+  const pillHeight = 10 * S * 1.2 + pillPadY * 2;
+  y += pillHeight + eyebrowGap;
 
-  ctx0.font = `700 ${20 * S}px 'Zen Maru Gothic', sans-serif`;
+  ctx0.font = `700 ${21 * S}px 'Zen Maru Gothic', sans-serif`;
   const nameLines = wrapCardText(ctx0, nameText, contentWidth);
-  y += nameLines.length * (20 * S * 1.3) + nameGap;
+  y += nameLines.length * (21 * S * 1.35) + nameToAccentGap;
+  y += accentBarHeight + accentToRowsGap;
 
   const rowLines = [];
   ctx0.font = `400 ${13 * S}px 'Zen Kaku Gothic New', sans-serif`;
@@ -1904,7 +1936,7 @@ function renderCardCanvas() {
     const lines = wrapCardText(ctx0, value, contentWidth);
     rowLines.push(lines);
     y += 10 * S * 1.2 + labelGap;
-    y += lines.length * (13 * S * 1.5) + rowGap;
+    y += lines.length * (13 * S * 1.6) + rowGap;
   }
   y += footerGap + 10 * S * 1.2 + padY;
 
@@ -1914,53 +1946,75 @@ function renderCardCanvas() {
   canvas.height = height;
   const ctx = canvas.getContext('2d');
 
+  // 背景 + 柔らかい光彩（box-shadowの近似。境界線には影を落とさないよう別パスで描く）
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,217,61,0.35)';
+  ctx.shadowBlur = 24 * S;
   const grad = ctx.createLinearGradient(0, 0, width, height);
   grad.addColorStop(0, '#3A322A');
   grad.addColorStop(1, '#241F18');
   ctx.fillStyle = grad;
-  roundRectPath(ctx, 0, 0, width, height, 28 * S);
+  roundRectPath(ctx, 0, 0, width, height, 32 * S);
   ctx.fill();
+  ctx.restore();
 
   ctx.strokeStyle = '#FFD93D';
-  ctx.lineWidth = 1 * S;
-  roundRectPath(ctx, 0.5 * S, 0.5 * S, width - 1 * S, height - 1 * S, 28 * S);
+  ctx.lineWidth = 2 * S;
+  roundRectPath(ctx, 1 * S, 1 * S, width - 2 * S, height - 2 * S, 32 * S);
   ctx.stroke();
 
   ctx.textBaseline = 'top';
   let cy = padY;
 
-  ctx.font = `600 ${10 * S}px 'Space Grotesk', sans-serif`;
-  ctx.fillStyle = '#FFD93D';
-  drawTrackedText(ctx, eyebrowText, padX, cy, 0.18);
-  cy += 10 * S * 1.2 + eyebrowGap;
+  // eyebrowバッジ（ピル型）
+  ctx.font = `700 ${10 * S}px 'Space Grotesk', sans-serif`;
+  const eyebrowWidth = measureTrackedWidth(ctx, eyebrowText, 0.16);
+  const pillWidth = eyebrowWidth + pillPadX * 2;
+  const pillGrad = ctx.createLinearGradient(padX, cy, padX + pillWidth, cy);
+  pillGrad.addColorStop(0, '#FFD93D');
+  pillGrad.addColorStop(1, '#C99A3E');
+  ctx.fillStyle = pillGrad;
+  roundRectPath(ctx, padX, cy, pillWidth, pillHeight, pillHeight / 2);
+  ctx.fill();
+  ctx.fillStyle = '#241F18';
+  drawTrackedText(ctx, eyebrowText, padX + pillPadX, cy + pillPadY, 0.16);
+  cy += pillHeight + eyebrowGap;
 
-  ctx.font = `700 ${20 * S}px 'Zen Maru Gothic', sans-serif`;
+  ctx.font = `700 ${21 * S}px 'Zen Maru Gothic', sans-serif`;
   ctx.fillStyle = '#FBF7EE';
   for (const line of nameLines) {
     ctx.fillText(line, padX, cy);
-    cy += 20 * S * 1.3;
+    cy += 21 * S * 1.35;
   }
-  cy += nameGap;
+  cy += nameToAccentGap;
+
+  const accentGrad = ctx.createLinearGradient(padX, 0, padX + accentBarWidth, 0);
+  accentGrad.addColorStop(0, '#4FA65C');
+  accentGrad.addColorStop(1, 'rgba(79,166,92,0)');
+  ctx.fillStyle = accentGrad;
+  roundRectPath(ctx, padX, cy, accentBarWidth, accentBarHeight, accentBarHeight / 2);
+  ctx.fill();
+  cy += accentBarHeight + accentToRowsGap;
 
   for (let i = 0; i < rows.length; i++) {
     const [label] = rows[i];
     ctx.font = `600 ${10 * S}px 'Space Grotesk', sans-serif`;
     ctx.fillStyle = '#FFD93D';
-    drawTrackedText(ctx, label, padX, cy, 0.12);
+    drawTrackedText(ctx, label, padX, cy, 0.1);
     cy += 10 * S * 1.2 + labelGap;
 
     ctx.font = `400 ${13 * S}px 'Zen Kaku Gothic New', sans-serif`;
-    ctx.fillStyle = 'rgba(251,247,238,0.85)';
+    ctx.fillStyle = 'rgba(251,247,238,0.9)';
     for (const line of rowLines[i]) {
       ctx.fillText(line, padX, cy);
-      cy += 13 * S * 1.5;
+      cy += 13 * S * 1.6;
     }
     cy += rowGap;
   }
 
   cy += footerGap;
   ctx.font = `500 ${10 * S}px 'Space Grotesk', sans-serif`;
-  ctx.fillStyle = 'rgba(251,247,238,0.45)';
+  ctx.fillStyle = 'rgba(251,247,238,0.3)';
   const dateWidth = ctx.measureText(dateText).width;
   ctx.fillText(dateText, width - padX - dateWidth, cy);
 
