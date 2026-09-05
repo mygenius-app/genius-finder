@@ -963,7 +963,8 @@ async function dbUpdate(table, id, fields) {
     await fetch(GENIUS_DATA_UPDATE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ table, id, fields })
+      // device_idはサーバー側の所有者チェックに使う(自分のデータしか書き換えられないように)
+      body: JSON.stringify({ table, id, fields, device_id: state.userId })
     });
   } catch (e) {
     console.error('dbUpdate failed', table, e);
